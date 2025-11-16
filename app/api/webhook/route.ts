@@ -1,11 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-export const config = {
-  api: {
-    bodyParser: false, // Important!
-  },
-};
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -24,13 +18,15 @@ export default async function handler(
       token === VERIFY_TOKEN
     ) {
       // challenge can be string or string[] or undefined, handle gracefully
-      return res.status(200).send(
-        typeof challenge === "string"
-          ? challenge
-          : Array.isArray(challenge)
-          ? challenge[0]
-          : ""
-      );
+      return res
+        .status(200)
+        .send(
+          typeof challenge === "string"
+            ? challenge
+            : Array.isArray(challenge)
+            ? challenge[0]
+            : ""
+        );
     } else {
       return res.status(403).send("Forbidden");
     }
