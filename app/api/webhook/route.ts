@@ -30,17 +30,7 @@ export async function GET(req: NextRequest) {
     token === VERIFY_TOKEN
   ) {
     // challenge can be string or string[] or undefined, handle gracefully
-    return NextResponse.json(
-      {
-        message:
-          typeof challenge === "string"
-            ? challenge
-            : Array.isArray(challenge)
-            ? challenge[0]
-            : "",
-      },
-      { status: 200 }
-    );
+    return new NextResponse(challenge, { status: 200 });
   } else {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
