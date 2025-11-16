@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getFirestore, Firestore } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 
@@ -24,7 +24,7 @@ if (getApps().length === 0) {
 
 // Initialize Firestore (works on both client and server)
 const db = getFirestore(app);
-let auth: Auth | undefined;
+let auth: Auth;
 let storage: FirebaseStorage | undefined;
 
 // Initialize services (only on client side for auth/storage)

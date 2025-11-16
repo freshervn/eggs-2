@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import { OrderData } from "../firebase/usePayment";
+// import { OrderData } from "../firebase/usePayment";
 
 const API_BASE_URL = "/api/orders";
 
@@ -44,44 +44,44 @@ export const createOrder = async (orderData: {
 /**
  * Get all orders
  */
-export const getOrders = async (options?: {
-  status?: "pending" | "completed" | "cancelled";
-  limit?: number;
-}): Promise<OrderData[]> => {
-  try {
-    const params: Record<string, string | number> = {};
-    if (options?.status) params.status = options.status;
-    if (options?.limit) params.limit = options.limit;
+// export const getOrders = async (options?: {
+//   status?: "pending" | "completed" | "cancelled";
+//   limit?: number;
+// }): Promise<OrderData[]> => {
+//   try {
+//     const params: Record<string, string | number> = {};
+//     if (options?.status) params.status = options.status;
+//     if (options?.limit) params.limit = options.limit;
 
-    const response = await axios.get(API_BASE_URL, {
-      params,
-    });
-    return response.data.orders;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.message || "Failed to get orders");
-    }
-    throw new Error("Failed to get orders");
-  }
-};
+//     const response = await axios.get(API_BASE_URL, {
+//       params,
+//     });
+//     return response.data.orders;
+//   } catch (error) {
+//     if (axios.isAxiosError(error)) {
+//       throw new Error(error.response?.data?.message || "Failed to get orders");
+//     }
+//     throw new Error("Failed to get orders");
+//   }
+// };
 
 /**
  * Get a specific order by ID
  */
-export const getOrder = async (orderId: string): Promise<OrderData | null> => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/${orderId}`);
-    return response.data.order;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      if (error.response && error.response.status === 404) {
-        return null;
-      }
-      throw new Error(error.response?.data?.message || "Failed to get order");
-    }
-    throw new Error("Failed to get order");
-  }
-};
+// export const getOrder = async (orderId: string): Promise<OrderData | null> => {
+//   try {
+//     const response = await axios.get(`${API_BASE_URL}/${orderId}`);
+//     return response.data.order;
+//   } catch (error) {
+//     if (axios.isAxiosError(error)) {
+//       if (error.response && error.response.status === 404) {
+//         return null;
+//       }
+//       throw new Error(error.response?.data?.message || "Failed to get order");
+//     }
+//     throw new Error("Failed to get order");
+//   }
+// };
 
 /**
  * Update an order
