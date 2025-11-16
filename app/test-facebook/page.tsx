@@ -27,7 +27,7 @@ export default function TestFacebookPage() {
     try {
       const response = await sendFacebookMessage({
         message,
-        recipientId: "61583914557523",
+        // recipientId: "61583914557523",        
       });
       setResult(response);
     } catch (err) {
