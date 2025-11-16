@@ -1,6 +1,6 @@
 // import type { NextApiRequest } from "next";
 import { NextRequest, NextResponse } from "next/server";
-// import { addDocument } from "@/_lib/firebase/firestore";
+import { addDocument } from "@/_lib/firebase/firestore";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -23,10 +23,10 @@ export async function POST(req: NextRequest) {
               message?: { text?: string };
             }) => {
               if (event.message && event.sender) {
-                // const senderId = event.sender.id;
+                const senderId = event.sender.id;
                 // Save senderId to Firebase (pseudo-code, implement as needed in your project)
                 // Add order to Firestore
-                // await addDocument("senderId", { senderId });
+                addDocument("senderId", { senderId });
                 // Here you can reply via Page Access Token API
               }
             }
