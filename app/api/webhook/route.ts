@@ -1,21 +1,46 @@
 // import type { NextApiRequest } from "next";
 import { NextRequest, NextResponse } from "next/server";
 
-// export async function POST(req: NextApiRequest) {
-//   let body = "";
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
 
-//   // Read raw body
-//   await new Promise<void>((resolve) => {
-//     req.on("data", (chunk: Buffer) => {
-//       body += chunk.toString();
-//     });
-//     req.on("end", resolve);
-//   });
+    console.log("Webhook Event:", JSON.stringify(body, null, 2));
 
-//   console.log("WEBHOOK EVENT:", body);
+    // Example: handling incoming messages
+    if (body.object === "page") {
+      body.entry.forEach(
+        (entry: {
+          messaging: Array<{
+            sender: { id: string };
+            message?: { text?: string };
+          }>;
+        }) => {
+          const messagingEvents = entry.messaging;
+          messagingEvents.forEach(
+            (event: {
+              sender: { id: string };
+              message?: { text?: string };
+            }) => {
+              if (event.message && event.sender) {
+                const senderId = event.sender.id;
+                const messageText = event.message.text;
+                console.log(`Message from ${senderId}: ${messageText}`);
+                // Here you can reply via Page Access Token API
+              }
+            }
+          );
+        }
+      );
+    }
 
-//   return NextResponse.json({ message: "EVENT_RECEIVED" }, { status: 200 });
-// }
+    return NextResponse.json({ status: "ok" }, { status: 200 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+}
+
 export async function GET(req: NextRequest) {
   const VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN;
   const { searchParams } = req.nextUrl;
