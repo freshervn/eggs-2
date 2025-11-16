@@ -12,13 +12,13 @@ interface MessageRequest {
 /**
  * POST /api/facebook/message
  * Send a message to Facebook profile
- * 
+ *
  * Note: Facebook Messenger API requires:
  * - A Facebook Page (not personal profile)
  * - App setup with proper permissions
  * - Page Access Token
  * - Recipient must have interacted with your page first
- * 
+ *
  * For personal profiles, this endpoint will generate a messenger link
  */
 export async function POST(request: NextRequest) {
@@ -26,7 +26,11 @@ export async function POST(request: NextRequest) {
     const body: MessageRequest = await request.json();
 
     // Validate required fields
-    if (!body.message || typeof body.message !== "string" || body.message.trim().length === 0) {
+    if (
+      !body.message ||
+      typeof body.message !== "string" ||
+      body.message.trim().length === 0
+    ) {
       return NextResponse.json(
         { error: "Message is required and must be a non-empty string" },
         { status: 400 }
@@ -49,11 +53,11 @@ export async function POST(request: NextRequest) {
         // 1. Store PSID mappings in your database (when users interact with your page)
         // 2. Look up the PSID from the recipientId/profile ID
         // 3. Use the PSID to send the message
-        
+
         // For now, we'll check if there's a PSID mapping in environment or database
         // This is a placeholder - you'll need to implement PSID lookup
         const psid = process.env[`FACEBOOK_PSID_${recipientId}`] || null;
-        
+
         if (psid) {
           const messengerResponse = await fetch(
             `${FACEBOOK_GRAPH_API_URL}/me/messages`,
@@ -101,13 +105,16 @@ export async function POST(request: NextRequest) {
 
     // Fallback: Generate a messenger link
     // This opens Facebook Messenger with a pre-filled message
-    const messengerLink = `https://m.me/${recipientId}?text=${encodeURIComponent(message)}`;
+    const messengerLink = `https://m.me/${recipientId}?text=${encodeURIComponent(
+      message
+    )}`;
     const webMessengerLink = `https://www.facebook.com/messages/t/${recipientId}`;
 
     return NextResponse.json(
       {
         success: true,
-        message: "Messenger link generated (Messenger API not configured or unavailable)",
+        message:
+          "Messenger link generated (Messenger API not configured or unavailable)",
         messengerLink,
         webMessengerLink,
         recipientId,
@@ -140,7 +147,7 @@ export async function GET(request: NextRequest) {
     const messengerLink = message
       ? `https://m.me/${recipientId}?text=${encodeURIComponent(message)}`
       : `https://m.me/${recipientId}`;
-    
+
     const webMessengerLink = `https://www.facebook.com/messages/t/${recipientId}`;
 
     return NextResponse.json(
@@ -165,4 +172,23 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN;
 
+export async function sendMessage(psid: string, text: string) {
+  const url = `https://graph.facebook.com/v17.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`;
+
+  const body = {
+    recipient: { id: psid },
+    message: { text },
+  };
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  const data = await res.json();
+  console.log("Message sent response:", data);
+  return data;
+}

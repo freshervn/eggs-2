@@ -1,6 +1,7 @@
 // import type { NextApiRequest } from "next";
 import { NextRequest, NextResponse } from "next/server";
-import { addDocument } from "@/_lib/firebase/firestore";
+// import { addDocument } from "@/_lib/firebase/firestore";
+import { sendMessage } from "../facebook/message/route";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -26,7 +27,8 @@ export async function POST(req: NextRequest) {
                 const senderId = event.sender.id;
                 // Save senderId to Firebase (pseudo-code, implement as needed in your project)
                 // Add order to Firestore
-                addDocument("senderId", { senderId });
+                sendMessage(senderId, `You said: ${senderId}, senderId`);
+                // addDocument("senderId", { senderId });
                 // Here you can reply via Page Access Token API
               }
             }
