@@ -52,7 +52,7 @@ const Payment = () => {
         {showQRCode ? (
           <PaymentQRCode
             paymentUrl={paymentUrl}
-            description="Quét mã qua ứng dụng momo hoặc zalo"
+            description="Quét mã qua ứng dụng momo"
           />
         ) : (
           <DeliveryAddress onAddressSubmit={handleAddressSubmit} />
