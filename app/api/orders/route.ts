@@ -1,4 +1,3 @@
-import { DeliveryAddress } from "./../../../_lib/store/cartStore";
 import { NextRequest, NextResponse } from "next/server";
 import {
   getDocuments,
@@ -64,7 +63,12 @@ export async function POST(request: NextRequest) {
         Khách hàng: ${body.deliveryAddress?.name}
         Điện thoại: ${body.deliveryAddress?.phone}
         Địa chỉ:${body.deliveryAddress.address}
-        ${body.items.map((item: { name: string; quantity: number }) => `${item.name} x${item.quantity}`).join(", ")}
+        ${body.items
+          .map(
+            (item: { name: string; quantity: number }) =>
+              `${item.name} x${item.quantity}`
+          )
+          .join(", ")}
         `
       );
     });
