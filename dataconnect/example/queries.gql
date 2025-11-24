@@ -1,0 +1,26 @@
+mutation CreateDemoUser @auth(level: PUBLIC, insecureReason: "This mutation is used to seed the database with example data.") {
+  user_insert(data: {id: "550e8400-e29b-41d4-a716-446655440000", displayName: "demouser1", email: "demouser1@example.com", userType: "customer"})
+}
+
+query ListEggTypes @auth(level: PUBLIC, insecureReason: "This query is safe to expose to the public") {
+  eggTypes {
+    id
+    eggName
+    description
+    pricePerDozen
+  }
+}
+
+mutation UpdateInventory($id: UUID!, $availableQuantity: Int!) @auth(level: USER) {
+  inventory_update(key: {id: $id}, data: {availableQuantity: $availableQuantity})
+}
+
+query GetProducerProfileByUserUid($userId: UUID!) @auth(level: USER) {
+  producerProfiles(where: {userId: {eq: $userId}}) {
+    id
+    farmName
+    location
+    description
+    deliveryOptions
+  }
+}

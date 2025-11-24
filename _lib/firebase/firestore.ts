@@ -91,9 +91,9 @@ export const addDocument = async <T extends FirestoreDocument>(
       ...data,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
-    });
-
+    });    
     const collectionRef = collection(db, collectionName);
+    console.log(collectionRef.path)
     const docRef = await addDoc(collectionRef, cleanData);
 
     // Verify the document was actually created
@@ -103,6 +103,7 @@ export const addDocument = async <T extends FirestoreDocument>(
         `Document was not created in collection "${collectionName}" despite addDoc success`
       );
     }
+    console.log(docRef.id);
 
     return docRef.id;
   } catch (error) {

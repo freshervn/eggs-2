@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  addDocument,
   getDocuments,
   queryHelpers,
   FirestoreDocument,
 } from "@/_lib/firebase/firestore";
+import { admin } from "@/_lib/firebase";
+
+const db = admin.firestore();
 
 export interface OrderData extends FirestoreDocument {
   items: Array<{
@@ -23,12 +25,10 @@ export interface OrderData extends FirestoreDocument {
     address: string;
   };
 }
-
 // POST /api/orders - Create a new order
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-
     // Validate required fields
     if (!body.items || !Array.isArray(body.items) || body.items.length === 0) {
       return NextResponse.json(
@@ -44,29 +44,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create order data - only include fields that have values (Firestore doesn't accept undefined)
-    const orderData: Partial<OrderData> = {
-      items: body.items,
-      total: body.total,
-      status: "pending",
-    };
-
-    // Only add optional fields if they exist
-    if (body.paymentMethod) {
-      orderData.paymentMethod = body.paymentMethod;
-    }
-    if (body.paymentUrl) {
-      orderData.paymentUrl = body.paymentUrl;
-    }
-    if (body.deliveryAddress) {
-      orderData.deliveryAddress = body.deliveryAddress;
-    }
-
     // Add order to Firestore
-    const orderId = await addDocument(
-      "orders",
-      orderData as Omit<OrderData, "id">
-    );
+    const orderId = await db
+      .collection("orders")
+      .add(body as Omit<OrderData, "id">);
 
     return NextResponse.json(
       {
@@ -77,7 +58,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error creating order:", error);
     return NextResponse.json(
       {
         error: "Failed to create order",
@@ -121,7 +101,6 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error getting orders:", error);
     return NextResponse.json(
       {
         error: "Failed to get orders",

@@ -51,8 +51,7 @@ const DeliveryAddress = ({ onAddressSubmit }: DeliveryAddressProps) => {
       // Validate cart has items
       if (items.length === 0) {
         throw new Error("Giỏ hàng của bạn đang trống");
-      }
-
+      }   
       // Create order with cart items, total, and delivery address
       const orderId = await createOrder({
         items,

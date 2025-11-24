@@ -9,9 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@dataconnect/generated": "link:src/dataconnect-generated",
     "axios": "^1.13.2",
     "classnames": "^2.5.1",
     "firebase": "^12.6.0",
+    "firebase-admin": "^13.6.0",
     "next": "16.0.2",
     "qrcode.react": "^4.2.0",
     "react": "19.2.0",
