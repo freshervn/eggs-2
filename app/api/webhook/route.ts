@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 // import { addDocument } from "@/_lib/firebase/firestore";
 import { sendMessage } from "../facebook/message/route";
+import { admin } from "@/_lib/firebase";
+const db = admin.firestore();
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -25,6 +27,7 @@ export async function POST(req: NextRequest) {
             }) => {
               if (event.message && event.sender) {
                 const senderId = event.sender.id;
+                db.collection("senderId").add({ senderId });
                 // Save senderId to Firebase (pseudo-code, implement as needed in your project)
                 // Add order to Firestore
                 sendMessage(senderId, `You said: ${senderId}, senderId`);
