@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
     token === VERIFY_TOKEN
   ) {
     // challenge can be string or string[] or undefined, handle gracefully
-    return new NextResponse(challenge, { status: 200 });
+    return new Response(challenge ?? "", { status: 200 });
   } else {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
