@@ -1,3 +1,4 @@
+import { DeliveryAddress } from "./../../../_lib/store/cartStore";
 import { NextRequest, NextResponse } from "next/server";
 import {
   getDocuments,
@@ -5,6 +6,7 @@ import {
   FirestoreDocument,
 } from "@/_lib/firebase/firestore";
 import { admin } from "@/_lib/firebase";
+import { sendMessage } from "../facebook/message/route";
 
 const db = admin.firestore();
 
@@ -48,6 +50,24 @@ export async function POST(request: NextRequest) {
     const orderId = await db
       .collection("orders")
       .add(body as Omit<OrderData, "id">);
+
+    // Retrieve all documents from the "Notification_ID" collection
+    const notificationSnapshot = await db.collection("Notification_ID").get();
+    const notificationIds = notificationSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    notificationIds.map(async (doc) => {
+      await sendMessage(
+        doc.id,
+        `Bạn có một đơn hàng mới: 
+        Khách hàng: ${body.deliveryAddress?.name}
+        Điện thoại: ${body.deliveryAddress?.phone}
+        Địa chỉ:${body.deliveryAddress.address}
+        ${body.items.map((item: { name: string; quantity: number }) => `${item.name} x${item.quantity}`).join(", ")}
+        `
+      );
+    });
 
     return NextResponse.json(
       {
