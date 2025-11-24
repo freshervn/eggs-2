@@ -2,15 +2,10 @@
 import { NextRequest, NextResponse } from "next/server";
 // import { addDocument } from "@/_lib/firebase/firestore";
 import { sendMessage } from "../facebook/message/route";
-import { admin } from "@/_lib/firebase";
-const db = admin.firestore();
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-
-    console.log("Webhook Event:", JSON.stringify(body, null, 2));
-
-    // Example: handling incoming messages
 
     if (body.object === "page") {
       for (const entry of body.entry) {
@@ -19,20 +14,23 @@ export async function POST(req: NextRequest) {
 
         const senderId = event.sender?.id;
         const messageText = event.message?.text;
+        const is_echo = event.message?.is_echo;
 
-        console.log("Incoming message:", messageText);
-        db.collection('senderId').add({senderId})
-        // Reply to user
-        if (senderId) {
-          await sendMessage(senderId, `You said: ${messageText}`);
+        if (senderId && messageText && !is_echo) {
+          await sendMessage(
+            senderId,
+            `Hello, chúng tôi bán trứng, bán rất nhiều trứng`
+          );
         }
       }
     }
 
     return NextResponse.json({ status: "ok" }, { status: 200 });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid request", err },
+      { status: 400 }
+    );
   }
 }
 

@@ -8,6 +8,24 @@ interface MessageRequest {
   message: string;
   recipientId?: string; // Optional: override default profile ID
 }
+const PAGE_ACCESS_TOKEN = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
+export async function sendMessage(psid: string, text: string) {
+  const url = `https://graph.facebook.com/v17.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`;
+  const body = {
+    recipient: { id: psid },
+    message: { text },
+  };
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  const data = await res.json();
+  console.log("Message sent response:", data);
+  return data;
+}
 
 /**
  * POST /api/facebook/message
@@ -172,23 +190,3 @@ export async function GET(request: NextRequest) {
   }
 }
 
-const PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN;
-
-export async function sendMessage(psid: string, text: string) {
-  const url = `https://graph.facebook.com/v17.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`;
-
-  const body = {
-    recipient: { id: psid },
-    message: { text },
-  };
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  const data = await res.json();
-  console.log("Message sent response:", data);
-  return data;
-}
