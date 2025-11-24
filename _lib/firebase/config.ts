@@ -36,7 +36,7 @@ import admin from "firebase-admin";
 admin.initializeApp({
   credential: admin.credential.cert({
     projectId: process.env.FIREBASE_PROJECT_ID,
-    privateKey: process.env.PRIVATE_KEY_ID,
+    privateKey: process.env.PRIVATE_KEY,
     clientEmail: process.env.CLIENT_EMAIL,
   }),
   databaseURL: "https://eggs-4b43a-default-rtdb.firebaseio.com",
