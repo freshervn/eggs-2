@@ -11,33 +11,22 @@ export async function POST(req: NextRequest) {
     console.log("Webhook Event:", JSON.stringify(body, null, 2));
 
     // Example: handling incoming messages
+
     if (body.object === "page") {
-      body.entry.forEach(
-        (entry: {
-          messaging: Array<{
-            sender: { id: string };
-            message?: { text?: string };
-          }>;
-        }) => {
-          const messagingEvents = entry.messaging;
-          messagingEvents.forEach(
-            (event: {
-              sender: { id: string };
-              message?: { text?: string };
-            }) => {
-              if (event.message && event.sender) {
-                const senderId = event.sender.id;
-                db.collection("senderId").add({ senderId });
-                // Save senderId to Firebase (pseudo-code, implement as needed in your project)
-                // Add order to Firestore
-                sendMessage(senderId, `You said: ${senderId}, senderId`);
-                // addDocument("senderId", { senderId });
-                // Here you can reply via Page Access Token API
-              }
-            }
-          );
+      for (const entry of body.entry) {
+        const event = entry.messaging?.[0];
+        if (!event) continue;
+
+        const senderId = event.sender?.id;
+        const messageText = event.message?.text;
+
+        console.log("Incoming message:", messageText);
+        db.collection('senderId').add({senderId})
+        // Reply to user
+        if (senderId) {
+          await sendMessage(senderId, `You said: ${messageText}`);
         }
-      );
+      }
     }
 
     return NextResponse.json({ status: "ok" }, { status: 200 });
