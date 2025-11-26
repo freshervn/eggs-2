@@ -24,12 +24,16 @@ export const createOrder = async (orderData: {
     address: string;
   };
 }): Promise<string> => {
-  try {    
-    const response = await axios.post(API_BASE_URL, orderData, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+  try {
+    const response = await axios.post(
+      API_BASE_URL,
+      { ...orderData, status: "NOT_DELIVERED" },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
     return response.data.orderId;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -89,7 +93,7 @@ export const createOrder = async (orderData: {
 export const updateOrder = async (
   orderId: string,
   updates: {
-    status?: "pending" | "completed" | "cancelled";
+    status: "UNPAID" | "NOT_DELIVERED" | "FINISHED";
     paymentMethod?: string;
     paymentUrl?: string;
   }

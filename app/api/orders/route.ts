@@ -4,8 +4,8 @@ import {
   getDocuments,
   queryHelpers,
   FirestoreDocument,
-} from "@/_lib/firebase/firestore";
-import { admin, realtimeAdminDB } from "@/_lib/firebase";
+} from "@/_lib/firebase/Admin/firestore";
+import { admin, realtimeAdminDB } from "@/_lib/firebase/Admin";
 import { sendMessage } from "../facebook/message/route";
 
 const db = admin.firestore();
@@ -17,7 +17,7 @@ export interface OrderData extends FirestoreDocument {
     quantity: number;
   }>;
   total: number;
-  status: "pending" | "completed" | "cancelled";
+  status: "UNPAID" | "NOT_DELIVERED" | "FINISHED";
   paymentMethod?: string;
   paymentUrl?: string;
   deliveryAddress?: {
