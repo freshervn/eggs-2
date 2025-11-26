@@ -1,26 +1,16 @@
+"use client";
 import EggList from "./_components/EggList";
 import Link from "next/link";
-const data = [
-  {
-    id: 1,
-    img: "/chiken eggs.png",
-    price: 3000,
-    name: "Trứng gà",
-  },
-  {
-    id: 2,
-    img: "/chiken eggs.png",
-    price: 2600,
-    name: "Trứng vịt",
-  },
-  {
-    id: 3,
-    img: "/chiken eggs.png",
-    price: 4500,
-    name: "Trứng vịt lộn",
-  },
-];
+import { getItems, Item } from "@/_lib/api/items";
+import { useEffect, useState } from "react";
+
 export default function Home() {
+  // Get data from items API using getItems from @/_lib/api/items
+  const [data, setData] = useState<Item[]>([]);
+
+  useEffect(() => {
+    getItems().then(setData);
+  }, []);
   return (
     <>
       <div className="h-dvh w-100dvw scroll-auto overflow-auto pb-20 pt-4">

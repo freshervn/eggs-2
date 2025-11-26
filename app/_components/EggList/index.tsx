@@ -101,7 +101,7 @@ const EggList = ({ data }: EggListProps) => {
             </aside>
             <aside className="px-3">
               <h1 className="font-semibold text-2xl mb-2">{item.name}</h1>
-              <h2>
+              <h2 className="text-3xl"> 
                 {(item.price * 10).toLocaleString("vi-VN", {
                   style: "currency",
                   currency: "VND",

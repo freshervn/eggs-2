@@ -10,7 +10,7 @@ export default function RootLayout({
       {children}
       <div className="bottom-0 left-0 w-full flex bg-green-500 absolute h-16 justify-between px-16 text-white">
         <div className="">
-          <Link href="/gia" className="flex items-center h-full">
+          <Link href="/quan-ly/gia" className="flex items-center h-full text-xl">
             <button className="relative inline-block rounded-full bg-blue-500 p-2">
               <span>Giá</span>
             </button>
@@ -24,7 +24,7 @@ export default function RootLayout({
           </Link>
         </div>
         <div>
-          <Link href="/no" className="flex items-center h-full">
+          <Link href="/quan-ly/no" className="flex items-center h-full">
             <button className="relative inline-block rounded-full bg-red-500 p-2">
               <span>Nợ</span>
             </button>
