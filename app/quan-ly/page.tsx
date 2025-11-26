@@ -75,7 +75,7 @@ export default function Home() {
                       <strong>Total:</strong> {order.total}
                     </div>
                     <div>
-                      <strong>Status:</strong> {order.status}
+                      <strong>Status:</strong> {order.status==="UNPAID" ? "còn nợ": order.status==="NOT_DELIVERED" ? "chờ giao" :"hoàn thành"}
                     </div>
                   </>
                 ) : (
