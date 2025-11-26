@@ -22,15 +22,15 @@ export async function POST(req: NextRequest) {
             `Hello, chúng tôi bán trứng, bán rất nhiều trứng`
           );
         }
-        if (messageText === "admin" && !is_echo) {
-          await axios.post(
-            `${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/admin`,
-            { id: senderId },
-            {
-              headers: { "Content-Type": "application/json" },
-            }
-          );
-        }
+        // if (messageText === "admin" && !is_echo) {
+        //   await axios.post(
+        //     `${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/admin`,
+        //     { id: senderId },
+        //     {
+        //       headers: { "Content-Type": "application/json" },
+        //     }
+        //   );
+        // }
       }
     }
 
