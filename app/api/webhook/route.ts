@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 // import { addDocument } from "@/_lib/firebase/firestore";
 import { sendMessage } from "../facebook/message/route";
-import axios from "axios";
+import { addNotificationId } from "@/_lib/api/admin";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -17,19 +17,17 @@ export async function POST(req: NextRequest) {
         const is_echo = event.message?.is_echo;
 
         if (messageText && !is_echo) {
-          await sendMessage(
-            senderId,
-            `Hello, chúng tôi bán trứng, bán rất nhiều trứng`
-          );
+          if (messageText === "Admin") {
+            addNotificationId(senderId);
+          } else
+            await sendMessage(
+              senderId,
+              `Hello, chúng tôi bán trứng, bán rất nhiều trứng`
+            );
         }
         // if (messageText === "admin" && !is_echo) {
-        //   await axios.post(
-        //     `${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/admin`,
-        //     { id: senderId },
-        //     {
-        //       headers: { "Content-Type": "application/json" },
-        //     }
-        //   );
+        //   console.log(senderId)
+
         // }
       }
     }
