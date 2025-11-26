@@ -2,8 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 // import { addDocument } from "@/_lib/firebase/firestore";
 import { sendMessage } from "../facebook/message/route";
-import { addDocument } from "@/_lib/firebase/Admin";
-
+import axios from "axios";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -24,9 +23,13 @@ export async function POST(req: NextRequest) {
           );
         }
         if (messageText === "admin" && !is_echo) {
-          await addDocument("orders", {
-            senderId,
-          });
+          await axios.post(
+            `${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/admin`,
+            { id: senderId },
+            {
+              headers: { "Content-Type": "application/json" },
+            }
+          );
         }
       }
     }
