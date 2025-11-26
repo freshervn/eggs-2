@@ -29,32 +29,32 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { orderID: string } }
-) {
-  try {
-    const orderId = params.orderID;
-    if (!orderId) {
-      return NextResponse.json(
-        { error: "orderID is required" },
-        { status: 400 }
-      );
-    }
-    const orderRef = realtimeAdminDB.ref(`orders/${orderId}`);
-    const snapshot = await orderRef.once("value");
-    if (!snapshot.exists()) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
-    }
-    const data = snapshot.val();
-    return NextResponse.json({ order: { id: orderId, ...data } });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        error: "Failed to get order",
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
-  }
-}
+// export async function GET(
+//   request: NextRequest,
+//   { params }: { params: { orderID: string } }
+// ) {
+//   try {
+//     const orderId = params.orderID;
+//     if (!orderId) {
+//       return NextResponse.json(
+//         { error: "orderID is required" },
+//         { status: 400 }
+//       );
+//     }
+//     const orderRef = realtimeAdminDB.ref(`orders/${orderId}`);
+//     const snapshot = await orderRef.once("value");
+//     if (!snapshot.exists()) {
+//       return NextResponse.json({ error: "Order not found" }, { status: 404 });
+//     }
+//     const data = snapshot.val();
+//     return NextResponse.json({ order: { id: orderId, ...data } });
+//   } catch (error) {
+//     return NextResponse.json(
+//       {
+//         error: "Failed to get order",
+//         message: error instanceof Error ? error.message : "Unknown error",
+//       },
+//       { status: 500 }
+//     );
+//   }
+// }
