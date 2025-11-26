@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import {
   getDocuments,
   queryHelpers,
   FirestoreDocument,
 } from "@/_lib/firebase/firestore";
-import { admin } from "@/_lib/firebase";
+import { admin, realtimeAdminDB } from "@/_lib/firebase";
 import { sendMessage } from "../facebook/message/route";
 
 const db = admin.firestore();
-
 export interface OrderData extends FirestoreDocument {
   items: Array<{
     id: string | number;
@@ -46,9 +46,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Add order to Firestore
-    const orderId = await db
-      .collection("orders")
-      .add(body as Omit<OrderData, "id">);
+    const ref = realtimeAdminDB.ref("orders").push();
+    const orderId = ref.key;
+    await ref.set(body);
 
     // Retrieve all documents from the "Notification_ID" collection
     const notificationSnapshot = await db.collection("Notification_ID").get();

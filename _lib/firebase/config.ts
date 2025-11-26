@@ -1,4 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
+import { getDatabase } from "firebase/database";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 import { getStorage, FirebaseStorage } from "firebase/storage";
@@ -24,6 +25,7 @@ if (getApps().length === 0) {
 
 // Initialize Firestore (works on both client and server)
 const db = getFirestore(app);
+
 let auth: Auth;
 let storage: FirebaseStorage | undefined;
 
@@ -39,7 +41,10 @@ admin.initializeApp({
     privateKey: process.env.PRIVATE_KEY?.replace(/\\n/g, "\n"),
     clientEmail: process.env.CLIENT_EMAIL,
   }),
+  databaseURL:
+    "https://eggs-4b43a-default-rtdb.firebaseio.com/",
 });
-
+const realtimeDB = getDatabase(app);
+const realtimeAdminDB = admin.database();
 export default admin;
-export { app, db, auth, storage, admin };
+export { app, db, auth, storage, admin, realtimeDB, realtimeAdminDB };
