@@ -25,10 +25,6 @@ export async function POST(req: NextRequest) {
               `Hello, chúng tôi bán trứng, bán rất nhiều trứng`
             );
         }
-        // if (messageText === "admin" && !is_echo) {
-        //   console.log(senderId)
-
-        // }
       }
     }
 

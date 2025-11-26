@@ -86,7 +86,7 @@ const EggList = ({ data }: EggListProps) => {
       <div className="w-full grid grid-rows-3 gap-4 h-full">
         {data.map((item) => (
           <div
-            className="w-full bg-green-500 p-4 grid grid-cols-2 rounded-md"
+            className="w-full bg-yellow-200 p-4 grid grid-cols-2 rounded-md text-black"
             key={item.id}
             onClick={() => openModal(item)}
           >
