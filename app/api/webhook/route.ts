@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 // import { addDocument } from "@/_lib/firebase/firestore";
 import { sendMessage } from "../facebook/message/route";
+import { addDocument } from "@/_lib/firebase/Admin";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,11 +17,16 @@ export async function POST(req: NextRequest) {
         const messageText = event.message?.text;
         const is_echo = event.message?.is_echo;
 
-        if (senderId && messageText && !is_echo) {
+        if (messageText && !is_echo) {
           await sendMessage(
             senderId,
             `Hello, chúng tôi bán trứng, bán rất nhiều trứng`
           );
+        }
+        if (messageText === "admin" && !is_echo) {
+          await addDocument("orders", {
+            senderId,
+          });
         }
       }
     }
