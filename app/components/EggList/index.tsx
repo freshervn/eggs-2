@@ -72,34 +72,38 @@ const EggList = ({ data }: EggListProps) => {
 
   return (
     <>
-      <div className="w-full bg-blue-500 flex flex-col gap-4 ">
+      <div className="w-full grid grid-rows-3 gap-4 h-full">
         {data.map((item) => (
           <div
-            className="w-full bg-green-500 p-4"
+            className="w-full bg-green-500 p-4 grid grid-cols-2 rounded-md"
             key={item.id}
             onClick={() => openModal(item)}
           >
-            <Image
-              src="/chiken%20eggs.jpg"
-              width={100}
-              height={100}
-              alt={item.name}
-              className="w-full object-cover bg-white"
-            />
-            <h1 className="font-semibold text-2xl mb-2">{item.name}</h1>
-            <h2>
-              {(item.price * 10).toLocaleString("vi-VN", {
-                style: "currency",
-                currency: "VND",
-              })}{" "}
-              / 10 quả
-            </h2>
+            <aside className="overflow-hidden">
+              <Image
+                src="/chiken%20eggs.jpg"
+                width={100}
+                height={100}
+                alt={item.name}
+                className="w-full object-cover bg-white"
+              />
+            </aside>
+            <aside className="px-3">
+              <h1 className="font-semibold text-2xl mb-2">{item.name}</h1>
+              <h2>
+                {(item.price * 10).toLocaleString("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                })}{" "}
+                / 10 quả
+              </h2>
+            </aside>
           </div>
         ))}
       </div>
       <Modal isOpen={isopenModal} onRequestClose={closeModal}>
         <div className="text-black">
-          <h3 className="text-center text-2xl mb-4 ">Chọn số Lượng mua</h3>
+          <h3 className="text-center text-3xl mb-4 ">Chọn số Lượng mua</h3>
           <h6 className="mb-2">Chọn nhanh</h6>
           <div className="grid grid-cols-5 gap-4">
             {amounts.map((amount, idx) => (

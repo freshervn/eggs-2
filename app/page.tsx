@@ -23,7 +23,7 @@ const data = [
 export default function Home() {
   return (
     <>
-      <div className="h-dvh w-100dvw bg-red-500 scroll-auto overflow-auto pb-16">
+      <div className="h-dvh w-100dvw scroll-auto overflow-auto pb-20 pt-4">
         <EggList data={data} />
         <div className="bottom-0 left-0 w-full flex justify-center bg-yellow-500 absolute h-16">
           <div className="">
@@ -45,7 +45,6 @@ export default function Home() {
                   <circle cx="7.5" cy="20.5" r="1.5" />
                   <circle cx="16.5" cy="20.5" r="1.5" />
                 </svg>
-                {/* Optionally add item count badge here if you wire up cart state */}
               </button>
             </Link>
           </div>
