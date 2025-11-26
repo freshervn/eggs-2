@@ -7,7 +7,7 @@ export default function CartLayout({
 }>) {
   return (
     <>
-      <div className="mb-4">
+      <div className="mb-4 pt-4">
         <Link
           href="/"
           className="inline-flex items-center px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-semibold rounded transition-colors"

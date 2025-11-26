@@ -66,7 +66,18 @@ const EggList = ({ data }: EggListProps) => {
         quantity: amount,
       });
       closeModal();
-      setAmount(10);
+    }
+  };
+  const Checkout = () => {
+    if (selectedItem && amount > 0) {
+      addToCart({
+        id: selectedItem.id,
+        name: selectedItem.name,
+        price: selectedItem.price,
+        quantity: amount,
+      });
+      closeModal();
+      window.location.href = "/payment";
     }
   };
 
@@ -164,6 +175,7 @@ const EggList = ({ data }: EggListProps) => {
           <div className="flex justify-center gap-4">
             <button
               type="button"
+              onClick={Checkout}
               className="bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 transition-colors font-semibold"
             >
               Thanh toán

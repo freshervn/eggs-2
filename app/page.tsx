@@ -1,4 +1,4 @@
-import EggList from "./components/EggList";
+import EggList from "./_components/EggList";
 import Link from "next/link";
 const data = [
   {

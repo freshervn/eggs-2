@@ -26,7 +26,6 @@ const DeliveryAddress = ({ onAddressSubmit }: DeliveryAddressProps) => {
     }
   );
 
-  const [submitted, setSubmitted] = useState(!!deliveryAddress);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,7 +50,7 @@ const DeliveryAddress = ({ onAddressSubmit }: DeliveryAddressProps) => {
       // Validate cart has items
       if (items.length === 0) {
         throw new Error("Giỏ hàng của bạn đang trống");
-      }   
+      }
       // Create order with cart items, total, and delivery address
       const orderId = await createOrder({
         items,
@@ -62,8 +61,6 @@ const DeliveryAddress = ({ onAddressSubmit }: DeliveryAddressProps) => {
 
       // Clear cart after successful order creation
       clearCart();
-
-      setSubmitted(true);
 
       // Call the callback to show QR code after a short delay
       if (onAddressSubmit) {
@@ -151,12 +148,6 @@ const DeliveryAddress = ({ onAddressSubmit }: DeliveryAddressProps) => {
       </button>
 
       {error && <div className="mt-4 text-red-600 font-semibold">{error}</div>}
-
-      {submitted && !error && (
-        <div className="mt-4 text-green-600 font-semibold">
-          Đã tạo đơn hàng thành công!
-        </div>
-      )}
     </form>
   );
 };

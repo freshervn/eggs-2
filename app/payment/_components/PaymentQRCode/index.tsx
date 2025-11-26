@@ -16,7 +16,9 @@ const PaymentQRCode = ({}: // paymentUrl = "https://example.com/payment/12345",
 PaymentQRCodeProps) => {
   return (
     <div className="flex flex-col items-center justify-center mt-8 mb-4">
-      <h1>Chúc mừng, bạn đã đặt hàng thành công</h1>
+      <h1 className="text-3xl text-black text-center">
+        Chúc mừng, bạn đã đặt hàng thành công
+      </h1>
       {/* <h2 className="text-xl font-semibold mb-4 text-black">{title}</h2>
       <div className="p-4 bg-white rounded-lg shadow-lg border border-pink-500">
         <QRCode

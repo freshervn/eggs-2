@@ -3,7 +3,7 @@
 import { useState } from "react";
 import ListItem from "./_components/ListItem";
 import PaymentQRCode from "./_components/PaymentQRCode";
-import Modal from "../components/Modal";
+import Modal from "../_components/Modal";
 import DeliveryAddress from "./_components/DeliveryAddress";
 
 const Payment = () => {
