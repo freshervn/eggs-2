@@ -1,32 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
 import { OrderData } from "../api/orders/route";
-import { realtimeDB } from "@/_lib/firebase/client";
-import { onValue, ref } from "firebase/database";
 import classNames from "classnames";
 import { updateOrder } from "@/_lib/api/orders";
+import { subscribeOrders } from "./_subscribeOrders";
 export default function Home() {
   const [orders, setOrders] = useState<OrderData[]>([]);
   useEffect(() => {
-    const ordersRef = ref(realtimeDB, "orders");
-
-    // Listen for real-time updates
-    const unsubscribe = onValue(ordersRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        // Convert object to array
-        const ordersArray = Object.keys(data).map((key) => ({
-          id: key,
-          ...data[key],
-        }));
-        setOrders(ordersArray);
-      } else {
-        setOrders([]);
-      }
+    const unsubscribe = subscribeOrders((orders) => {
+      setOrders(orders as OrderData[]);
     });
 
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
+    return () => {
+      // unsubscribe could be a function or the return value from onValue
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
   }, []);
   const OderDilivered = (order: OrderData) => {
     updateOrder(String(order.id), { ...order, status: "UNPAID" });
@@ -75,7 +63,12 @@ export default function Home() {
                       <strong>Total:</strong> {order.total}
                     </div>
                     <div>
-                      <strong>Status:</strong> {order.status==="UNPAID" ? "còn nợ": order.status==="NOT_DELIVERED" ? "chờ giao" :"hoàn thành"}
+                      <strong>Status:</strong>{" "}
+                      {order.status === "UNPAID"
+                        ? "còn nợ"
+                        : order.status === "NOT_DELIVERED"
+                        ? "chờ giao"
+                        : "hoàn thành"}
                     </div>
                   </>
                 ) : (

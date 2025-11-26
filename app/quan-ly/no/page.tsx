@@ -1,87 +1,105 @@
 "use client";
 import { useEffect, useState } from "react";
 
-// Define the type for an Order. You can update according to your schema.
-type Order = {
-  id: string;
-  customerName?: string;
-  total?: number;
-  status?: string;
-  // ...other fields
-};
-
-export default function UnpaidOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+import classNames from "classnames";
+import { updateOrder } from "@/_lib/api/orders";
+import { OrderData } from "@/app/api/orders/route";
+import { getOrdersByStatus } from "../_subscribeOrders";
+export default function Home() {
+  const [orders, setOrders] = useState<OrderData[]>([]);
   useEffect(() => {
-    async function fetchUnpaidOrders() {
-      setLoading(true);
-      setError(null);
-      try {
-        // You should have an API route like /api/orders?status=UNPAID
-        // Adjust if your API uses something different.
-        const res = await fetch("/api/orders?status=UNPAID");
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data?.error || "Failed to fetch orders");
-        }
-        const data = await res.json();
-        setOrders(data.orders || []);
-      } catch (e) {
-        setError(
-          e instanceof Error
-            ? e.message
-            : "Có lỗi xảy ra khi lấy danh sách đơn hàng."
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
+    const unsubscribe = getOrdersByStatus("UNPAID", (orders) => {
+      setOrders(orders as OrderData[]);
+    });
 
-    fetchUnpaidOrders();
+    return () => {
+      // unsubscribe could be a function or the return value from onValue
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
   }, []);
+  const OderDilivered = (order: OrderData) => {
+    updateOrder(String(order.id), { ...order, status: "UNPAID" });
+  };
+  const finshed = (order: OrderData) => {
+    updateOrder(String(order.id), { ...order, status: "FINISHED" });
+  };
 
   return (
-    <div className="pt-4">
-      <h1 className="text-3xl text-center text-black mb-8">
-        Đơn hàng chưa thanh toán
-      </h1>
-      {loading && <div className="text-center text-blue-500">Đang tải...</div>}
-      {error && <div className="text-center text-red-500 mb-4">{error}</div>}
-      <div className="grid gap-4">
-        {orders.length === 0 && !loading && (
-          <div className="text-center text-gray-500">
-            Không có đơn hàng nào chưa thanh toán.
-          </div>
-        )}
+    <div className="text-black py-4">
+      <h2 className="text-center text-3xl mb-8 mt-4">Đơn hàng</h2>
+      {orders.length === 0 && <p>Chưa có đơn nào</p>}
+      <div className="flex flex-col gap-4">
         {orders.map((order) => (
           <div
             key={order.id}
-            className="bg-yellow-200 rounded-xl p-4 shadow flex flex-col gap-2"
+            className={classNames("p-4 rounded-md", {
+              "bg-yellow-300": order?.status === "NOT_DELIVERED",
+              "bg-red-300": order?.status === "UNPAID",
+              "bg-gray-500": order?.status === "FINISHED",
+            })}
           >
-            <div>
-              <span className="font-semibold">Mã đơn hàng:</span> {order.id}
-            </div>
-            {order.customerName && (
-              <div>
-                <span className="font-semibold">Khách hàng:</span>{" "}
-                {order.customerName}
-              </div>
-            )}
-            {order.total != null && (
-              <div>
-                <span className="font-semibold">Tổng:</span>{" "}
-                {order.total.toLocaleString("vi-VN", {
-                  style: "currency",
-                  currency: "VND",
-                })}
-              </div>
-            )}
-            <div>
-              <span className="font-semibold">Trạng thái:</span>{" "}
-              {order.status || "Không xác định"}
+            <div className="grid grid-cols-2">
+              <aside>
+                {order.items && Array.isArray(order.items) ? (
+                  <>
+                    <div>
+                      {order.items.map(
+                        (
+                          item: {
+                            id: string | number;
+                            name: string;
+                            price: number;
+                            quantity: number;
+                          },
+                          idx: number
+                        ) => (
+                          <div key={idx}>
+                            <strong>{item.name}</strong> : {item.price} x{" "}
+                            {item.quantity}
+                          </div>
+                        )
+                      )}
+                    </div>
+                    <div>
+                      <strong>Total:</strong> {order.total}
+                    </div>
+                    <div>
+                      <strong>Status:</strong>{" "}
+                      {order.status === "UNPAID"
+                        ? "còn nợ"
+                        : order.status === "NOT_DELIVERED"
+                        ? "chờ giao"
+                        : "hoàn thành"}
+                    </div>
+                  </>
+                ) : (
+                  "Invalid order data"
+                )}
+              </aside>
+              <aside className="flex flex-col gap-4">
+                {order.status !== "FINISHED" && (
+                  <>
+                    {order?.status === "NOT_DELIVERED" && (
+                      <button
+                        className="bg-green-500 rounded-2xl p-2 text-white"
+                        onClick={() => OderDilivered(order)}
+                      >
+                        Đã giao
+                      </button>
+                    )}
+                    {order?.status === "UNPAID" && (
+                      <button
+                        className="bg-blue-500 rounded-2xl p-2 text-white"
+                        onClick={() => {
+                          finshed(order);
+                        }}
+                      >
+                        Đã thanh toán
+                      </button>
+                    )}
+                  </>
+                )}
+              </aside>
             </div>
           </div>
         ))}
