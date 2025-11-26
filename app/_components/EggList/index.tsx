@@ -4,15 +4,10 @@ import Modal from "../Modal";
 import { useState } from "react";
 import classNames from "classnames";
 import { useCartStore } from "@/_lib/store/cartStore";
-
-type Egg = {
-  id: string | number;
-  name: string;
-  price: number;
-};
+import { Item } from "@/_lib/api/items";
 
 type EggListProps = {
-  data: Egg[];
+  data: Item[];
 };
 const amounts = [10, 20, 30, 40, 50];
 
@@ -20,9 +15,9 @@ const EggList = ({ data }: EggListProps) => {
   const addToCart = useCartStore((state) => state.addToCart);
 
   const [isopenModal, setOpenModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<Egg | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
 
-  const openModal = (item: Egg) => {
+  const openModal = (item: Item) => {
     setSelectedItem(item);
     setOpenModal(true);
   };
@@ -86,13 +81,13 @@ const EggList = ({ data }: EggListProps) => {
       <div className="w-full grid grid-rows-3 gap-4 h-full">
         {data.map((item) => (
           <div
-            className="w-full bg-yellow-200 p-4 grid grid-cols-2 rounded-md text-black"
+            className="w-full bg-yellow-300 p-4 grid grid-cols-2 rounded-md text-black"
             key={item.id}
             onClick={() => openModal(item)}
           >
             <aside className="overflow-hidden">
               <Image
-                src="/chiken%20eggs.jpg"
+                src={item.img || "/chiken eggs.jpg"}
                 width={100}
                 height={100}
                 alt={item.name}
@@ -101,7 +96,7 @@ const EggList = ({ data }: EggListProps) => {
             </aside>
             <aside className="px-3">
               <h1 className="font-semibold text-2xl mb-2">{item.name}</h1>
-              <h2 className="text-3xl"> 
+              <h2 className="text-3xl">
                 {(item.price * 10).toLocaleString("vi-VN", {
                   style: "currency",
                   currency: "VND",
