@@ -6,7 +6,6 @@ import { addNotificationId } from "@/_lib/api/admin";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-
     if (body.object === "page") {
       for (const entry of body.entry) {
         const event = entry.messaging?.[0];
