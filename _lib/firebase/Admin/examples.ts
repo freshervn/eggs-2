@@ -9,10 +9,9 @@ import {
   getDocuments,
   addDocument,
   updateDocument,
-  deleteDocument,
   queryHelpers,
 } from "./firestore";
-import { signIn, signUp, signOutUser, onAuthChange } from "./auth";
+import { signIn, signUp, onAuthChange } from "./auth";
 
 // ============================================
 // FIRESTORE EXAMPLES
@@ -117,7 +116,7 @@ export const loginUser = async (email: string, password: string) => {
 };
 
 // Example: Listen to auth state changes
-export const setupAuthListener = (callback: (user: any) => void) => {
+export const setupAuthListener = (callback: (user: unknown) => void) => {
   return onAuthChange((user) => {
     if (user) {
       console.log("User is signed in:", user);

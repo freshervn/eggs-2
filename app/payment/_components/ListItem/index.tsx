@@ -38,7 +38,7 @@ const ListItem = () => {
                   {item.name}
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  {item.price.toLocaleString("vi-VN", {
+                  {(item.price * 10).toLocaleString("vi-VN", {
                     style: "currency",
                     currency: "VND",
                   })}{" "}

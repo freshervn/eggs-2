@@ -18,6 +18,7 @@ const EggList = ({ data }: EggListProps) => {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
 
   const openModal = (item: Item) => {
+    console.log(item);
     setSelectedItem(item);
     setOpenModal(true);
   };
@@ -97,7 +98,7 @@ const EggList = ({ data }: EggListProps) => {
             <aside className="px-3">
               <h1 className="font-semibold text-2xl mb-2">{item.name}</h1>
               <h2 className="text-3xl">
-                {(item.price).toLocaleString("vi-VN", {
+                {(item.price * 10).toLocaleString("vi-VN", {
                   style: "currency",
                   currency: "VND",
                 })}{" "}
