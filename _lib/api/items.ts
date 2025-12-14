@@ -7,7 +7,7 @@ export type Item = {
 
 export async function getItems() {
   const res = await fetch("/api/items");
-  if (!res.ok) {
+  if (!res.ok) {    
     throw new Error("Failed to fetch items");
   }
   const data = await res.json();

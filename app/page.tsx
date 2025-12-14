@@ -14,6 +14,7 @@ export default function Home() {
   return (
     <>
       <div className="h-dvh w-100dvw scroll-auto overflow-auto pb-20 pt-4">
+        <p>hello world</p>
         <EggList data={data} />
         <div className="bottom-0 left-0 w-full flex justify-center bg-yellow-500 absolute h-16">
           <div className="">
