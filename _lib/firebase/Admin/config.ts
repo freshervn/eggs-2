@@ -3,6 +3,7 @@ import { getDatabase } from "firebase/database";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 import { getStorage, FirebaseStorage } from "firebase/storage";
+import admin from "firebase-admin";
 
 // Firebase configuration
 // Replace these values with your Firebase project config
@@ -34,16 +35,18 @@ if (typeof window !== "undefined") {
   auth = getAuth(app);
   storage = getStorage(app);
 }
-import admin from "firebase-admin";
-admin.initializeApp({
-  credential: admin.credential.cert({
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    privateKey: process.env.PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    clientEmail: process.env.CLIENT_EMAIL,
-  }),
-  databaseURL:
-    "https://eggs-4b43a-default-rtdb.firebaseio.com/",
-});
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      privateKey: process.env.PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      clientEmail: process.env.CLIENT_EMAIL,
+    }),
+    databaseURL: "https://eggs-4b43a-default-rtdb.firebaseio.com/",
+  });
+}
+
 const realtimeDB = getDatabase(app);
 const realtimeAdminDB = admin.database();
 export default admin;

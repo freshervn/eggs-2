@@ -1,13 +1,31 @@
+import { readSession } from "@/_lib/auth/session";
+import LogoutButton from "../_components/LogoutButton";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await readSession();
+
+  if (!session) {
+    redirect("/login?next=/quan-ly");
+  }
+
   return (
     <>
       <div className="h-dvh w-100dvw scroll-auto overflow-auto pb-20 pt-4">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm text-slate-500">Signed in as</p>
+            <p className="font-semibold text-slate-900">
+              {session.displayName} (@{session.username})
+            </p>
+          </div>
+          <LogoutButton nextPath="/quan-ly" />
+        </div>
         {children}
         <div className="bottom-0 left-0 w-full flex bg-green-500 absolute h-16 justify-between px-16 text-white">
           <div className="">

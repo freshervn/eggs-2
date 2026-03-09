@@ -14,6 +14,26 @@ export default function Home() {
   return (
     <>
       <div className="h-dvh w-100dvw scroll-auto overflow-auto pb-20 pt-4">
+        <div className="mb-4 flex gap-3">
+          <Link
+            href="/login?next=/chat"
+            className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+          >
+            Login
+          </Link>
+          <Link
+            href="/register?next=/chat"
+            className="rounded-full border border-slate-900 px-4 py-2 text-sm font-medium text-slate-900"
+          >
+            Register
+          </Link>
+          <Link
+            href="/chat"
+            className="rounded-full border border-sky-600 px-4 py-2 text-sm font-medium text-sky-700"
+          >
+            Open Chat
+          </Link>
+        </div>
         <p>hello world</p>
         <EggList data={data} />
         <div className="bottom-0 left-0 w-full flex justify-center bg-yellow-500 absolute h-16">
