@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "Invalid username or password." },
+        { error: "Sai tên đăng nhập hoặc mật khẩu." },
         { status: 401 }
       );
     }
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     if (!passwordMatches) {
       return NextResponse.json(
-        { error: "Invalid username or password." },
+        { error: "Sai tên đăng nhập hoặc mật khẩu." },
         { status: 401 }
       );
     }
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Failed to sign in.";
+      error instanceof Error ? error.message : "Đăng nhập thất bại.";
     const status =
       message.includes("Username must be") || message.includes("Password must be")
         ? 400

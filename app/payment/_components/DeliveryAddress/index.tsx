@@ -5,9 +5,10 @@ import {
   type DeliveryAddress as DeliveryAddressType,
 } from "@/_lib/store/cartStore";
 import { createOrder } from "@/_lib/api/orders";
+import { createMoMoPayment } from "@/_lib/api/momo";
 
 type DeliveryAddressProps = {
-  onAddressSubmit?: (orderId?: string) => void;
+  onAddressSubmit?: (orderId?: string, payUrl?: string) => void;
 };
 
 const DeliveryAddress = ({ onAddressSubmit }: DeliveryAddressProps) => {
@@ -51,10 +52,12 @@ const DeliveryAddress = ({ onAddressSubmit }: DeliveryAddressProps) => {
       if (items.length === 0) {
         throw new Error("Giỏ hàng của bạn đang trống");
       }
+      const total = getTotalPrice();
+
       // Create order with cart items, total, and delivery address
       const orderId = await createOrder({
         items,
-        total: getTotalPrice(),
+        total,
         deliveryAddress: form,
         paymentMethod: "qr_code",
       });
@@ -62,10 +65,25 @@ const DeliveryAddress = ({ onAddressSubmit }: DeliveryAddressProps) => {
       // Clear cart after successful order creation
       clearCart();
 
+      // Create MoMo payment link
+      const baseUrl =
+        typeof window !== "undefined" ? window.location.origin : "";
+      const { payUrl } = await createMoMoPayment({
+        orderId,
+        amount: total,
+        orderInfo: `Đơn hàng #${orderId} - ${items.map((i) => i.name).join(", ")}`,
+        redirectUrl: `${baseUrl}/payment?success=1&orderId=${orderId}`,
+        ipnUrl: `${baseUrl}/api/momo/ipn`,
+        userInfo: {
+          name: form.name,
+          phoneNumber: form.phone,
+        },
+      });
+
       // Call the callback to show QR code after a short delay
       if (onAddressSubmit) {
         setTimeout(() => {
-          onAddressSubmit(orderId);
+          onAddressSubmit(orderId, payUrl);
         }, 500);
       }
     } catch (err) {

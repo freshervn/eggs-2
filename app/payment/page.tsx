@@ -10,28 +10,25 @@ const Payment = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [orderId, setOrderId] = useState<string | undefined>();
-
-  // Generate payment URL with order ID if available
-  const paymentUrl = orderId
-    ? `https://example.com/payment/${orderId}`
-    : "https://example.com/payment/12345";
+  const [payUrl, setPayUrl] = useState<string | undefined>();
 
   const handleOpenModal = () => {
     setIsOpen(true);
     setShowQRCode(false);
     setOrderId(undefined);
+    setPayUrl(undefined);
   };
 
   const handleCloseModal = () => {
     setIsOpen(false);
     setShowQRCode(false);
     setOrderId(undefined);
+    setPayUrl(undefined);
   };
 
-  const handleAddressSubmit = (createdOrderId?: string) => {
-    if (createdOrderId) {
-      setOrderId(createdOrderId);
-    }
+  const handleAddressSubmit = (createdOrderId?: string, momoPayUrl?: string) => {
+    if (createdOrderId) setOrderId(createdOrderId);
+    if (momoPayUrl) setPayUrl(momoPayUrl);
     setShowQRCode(true);
   };
 
@@ -51,8 +48,8 @@ const Payment = () => {
       <Modal isOpen={isOpen} onRequestClose={handleCloseModal}>
         {showQRCode ? (
           <PaymentQRCode
-            paymentUrl={paymentUrl}
-            description="Quét mã qua ứng dụng momo"
+            paymentUrl={payUrl}
+            description="Quét mã qua ứng dụng MoMo"
           />
         ) : (
           <DeliveryAddress onAddressSubmit={handleAddressSubmit} />

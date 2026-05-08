@@ -1,6 +1,11 @@
 "use client";
 
-// import QRCode from "../../../components/QRCode";
+import dynamic from "next/dynamic";
+
+const QRCode = dynamic(
+  () => import("@/app/_components/QRCode").then((mod) => mod.default),
+  { ssr: false }
+);
 
 type PaymentQRCodeProps = {
   paymentUrl?: string;
@@ -9,31 +14,42 @@ type PaymentQRCodeProps = {
   description?: string;
 };
 
-const PaymentQRCode = ({}: // paymentUrl = "https://example.com/payment/12345",
-// size = 200,
-// title = "Quét mã QR để thanh toán",
-// description = "Hoặc quét mã QR ở trên",
-PaymentQRCodeProps) => {
+const PaymentQRCode = ({
+  paymentUrl,
+  size = 200,
+  title = "Quét mã QR để thanh toán",
+  description = "Quét mã qua ứng dụng MoMo",
+}: PaymentQRCodeProps) => {
   return (
     <div className="flex flex-col items-center justify-center mt-8 mb-4">
       <h1 className="text-3xl text-black text-center">
         Chúc mừng, bạn đã đặt hàng thành công
       </h1>
-      {/* <h2 className="text-xl font-semibold mb-4 text-black">{title}</h2>
-      <div className="p-4 bg-white rounded-lg shadow-lg border border-pink-500">
-        <QRCode
-          value={paymentUrl}
-          size={size}
-          level="H"
-          bgColor="#FFFFFF"
-          fgColor="#000000"
-        />
-      </div>
-      <p className="text-sm text-gray-600 mt-2">{description}</p>
-      <h3 className="text-black mt-2">Hoặc</h3>
-      <button className="mt-4 px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-full shadow transition-all duration-200">
-        Thanh toán bằng tiền mặt
-      </button> */}
+      {paymentUrl ? (
+        <>
+          <h2 className="text-xl font-semibold mb-4 text-black mt-4">{title}</h2>
+          <div className="p-4 bg-white rounded-lg shadow-lg border border-amber-200">
+            <QRCode
+              value={paymentUrl}
+              size={size}
+              level="H"
+              bgColor="#FFFFFF"
+              fgColor="#000000"
+            />
+          </div>
+          <p className="text-sm text-gray-600 mt-2">{description}</p>
+          <a
+            href={paymentUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 px-6 py-3 bg-[#A50064] hover:bg-[#8B0052] text-white font-semibold rounded-full shadow transition-all duration-200"
+          >
+            Thanh toán bằng MoMo
+          </a>
+        </>
+      ) : (
+        <p className="text-gray-600 mt-4">Đang tạo link thanh toán...</p>
+      )}
     </div>
   );
 };

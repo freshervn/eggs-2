@@ -4,6 +4,29 @@ import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "
 
 const TYPING_TTL_MS = 5000;
 
+const USER_COLORS = [
+  { bg: "hsl(220 70% 45%)", text: "white" },
+  { bg: "hsl(280 60% 45%)", text: "white" },
+  { bg: "hsl(340 65% 45%)", text: "white" },
+  { bg: "hsl(20 75% 45%)", text: "white" },
+  { bg: "hsl(45 70% 40%)", text: "white" },
+  { bg: "hsl(160 55% 40%)", text: "white" },
+  { bg: "hsl(195 65% 40%)", text: "white" },
+  { bg: "hsl(260 55% 50%)", text: "white" },
+  { bg: "hsl(320 60% 45%)", text: "white" },
+  { bg: "hsl(140 50% 45%)", text: "white" },
+] as const;
+
+const getColorForUser = (username: string) => {
+  let hash = 0;
+  for (let i = 0; i < username.length; i++) {
+    hash = (hash << 5) - hash + username.charCodeAt(i);
+    hash |= 0;
+  }
+  const index = Math.abs(hash) % USER_COLORS.length;
+  return USER_COLORS[index];
+};
+
 export interface ChatMessage {
   id: string;
   text: string;
@@ -49,12 +72,14 @@ interface ChatRoomProps {
   initialMessages: ChatMessage[];
   initialRooms: ChatRoomSummary[];
   currentUsername: string;
+  currentDisplayName?: string;
 }
 
 export default function ChatRoom({
   initialMessages,
   initialRooms,
   currentUsername,
+  currentDisplayName,
 }: ChatRoomProps) {
   const [rooms, setRooms] = useState(initialRooms);
   const [messages, setMessages] = useState(initialMessages);
@@ -66,6 +91,22 @@ export default function ChatRoom({
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
   const [text, setText] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const [expandedDateIds, setExpandedDateIds] = useState<Set<string>>(new Set());
+  const [isLoadingRoom, setIsLoadingRoom] = useState(false);
+  const prevRoomIdRef = useRef<string | null>(null);
+
+  const toggleMessageDate = (messageId: string) => {
+    setExpandedDateIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(messageId)) {
+        next.delete(messageId);
+      } else {
+        next.add(messageId);
+      }
+      return next;
+    });
+  };
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [error, setError] = useState("");
@@ -210,8 +251,21 @@ export default function ChatRoom({
       setMessages([]);
       setTypingUsers([]);
       setPresence(null);
+      setExpandedDateIds(new Set());
+      setIsLoadingRoom(false);
+      prevRoomIdRef.current = null;
       return;
     }
+
+    const isSwitching =
+      prevRoomIdRef.current !== null && prevRoomIdRef.current !== activeRoomId;
+    prevRoomIdRef.current = activeRoomId;
+
+    if (isSwitching) {
+      setMessages([]);
+      setIsLoadingRoom(true);
+    }
+    setExpandedDateIds(new Set());
 
     const eventSource = new EventSource(`/api/chat/rooms/${activeRoomId}/stream`);
 
@@ -227,6 +281,7 @@ export default function ChatRoom({
 
       if (data.error) {
         setError(data.error);
+        setIsLoadingRoom(false);
         return;
       }
 
@@ -234,10 +289,12 @@ export default function ChatRoom({
       setTypingUsers(Array.isArray(data.typingUsers) ? data.typingUsers : []);
       setPresence(data.presence ?? null);
       setError("");
+      setIsLoadingRoom(false);
     };
 
     eventSource.onerror = () => {
       setError("Live message updates disconnected.");
+      setIsLoadingRoom(false);
     };
 
     return () => {
@@ -259,7 +316,7 @@ export default function ChatRoom({
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, pendingMessage]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -343,6 +400,8 @@ export default function ChatRoom({
     }
 
     setIsSending(true);
+    setPendingMessage(nextText);
+    setText("");
     setError("");
 
     try {
@@ -367,11 +426,12 @@ export default function ChatRoom({
       }
 
       setTypingUsers([]);
-      setText("");
     } catch {
       setError("Failed to send message.");
+      setText(nextText);
     } finally {
       setIsSending(false);
+      setPendingMessage(null);
     }
   };
 
@@ -567,43 +627,84 @@ export default function ChatRoom({
         </div>
 
         <div className="h-[60vh] space-y-3 overflow-y-auto px-4 py-4">
-          {emptyState ? (
+          {isLoadingRoom ? (
+            <div className="flex h-full min-h-[200px] items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <span
+                  className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600"
+                  aria-hidden
+                />
+                <p className="text-sm text-slate-500">Loading messages...</p>
+              </div>
+            </div>
+          ) : emptyState && !pendingMessage ? (
             <p className="text-sm text-slate-500">
               {activeRoom
                 ? "No messages yet. Start the conversation."
                 : "Pick a room or create a new private chat."}
             </p>
           ) : (
-            messages.map((message) => {
-              const isCurrentUser = message.username === currentUsername;
+            <>
+              {messages.map((message) => {
+                const isCurrentUser = message.username === currentUsername;
+                const { bg, text } = getColorForUser(message.username);
 
-              return (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    isCurrentUser ? "justify-end" : "justify-start"
-                  }`}
-                >
+                return (
                   <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                      isCurrentUser
-                        ? "bg-slate-900 text-white"
-                        : "bg-slate-100 text-slate-900"
+                    key={message.id}
+                    className={`flex ${
+                      isCurrentUser ? "justify-end" : "justify-start"
                     }`}
                   >
+                    <button
+                      type="button"
+                      onClick={() => toggleMessageDate(message.id)}
+                      className="max-w-[80%] cursor-pointer rounded-2xl px-4 py-3 text-left transition-opacity hover:opacity-90"
+                      style={{
+                        backgroundColor: bg,
+                        color: text,
+                      }}
+                    >
+                      <div className="mb-1 text-xs opacity-75">
+                        {message.displayName} @{message.username}
+                      </div>
+                      <p className="whitespace-pre-wrap break-words text-sm">
+                        {message.text}
+                      </p>
+                      {expandedDateIds.has(message.id) ? (
+                        <div className="mt-2 text-[11px] opacity-70">
+                          {new Date(message.createdAt).toLocaleString()}
+                        </div>
+                      ) : null}
+                    </button>
+                  </div>
+                );
+              })}
+              {pendingMessage ? (
+                <div className="flex justify-end">
+                  <div
+                    className="max-w-[80%] rounded-2xl px-4 py-3 text-white"
+                    style={{
+                      backgroundColor: getColorForUser(currentUsername).bg,
+                    }}
+                  >
                     <div className="mb-1 text-xs opacity-75">
-                      {message.displayName} @{message.username}
+                      {currentDisplayName ?? currentUsername} @{currentUsername}
                     </div>
                     <p className="whitespace-pre-wrap break-words text-sm">
-                      {message.text}
+                      {pendingMessage}
                     </p>
-                    <div className="mt-2 text-[11px] opacity-70">
-                      {new Date(message.createdAt).toLocaleString()}
+                    <div className="mt-2 flex items-center gap-2 text-[11px] opacity-70">
+                      <span
+                        className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent"
+                        aria-hidden
+                      />
+                      Sending...
                     </div>
                   </div>
                 </div>
-              );
-            })
+              ) : null}
+            </>
           )}
           <div ref={endRef} />
         </div>
@@ -635,7 +736,7 @@ export default function ChatRoom({
               disabled={isSending || !activeRoom}
               className="rounded-xl bg-slate-900 px-5 py-3 font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
             >
-              {isSending ? "Sending..." : "Send"}
+              Send
             </button>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs text-slate-500">

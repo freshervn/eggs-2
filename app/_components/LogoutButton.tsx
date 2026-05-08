@@ -34,7 +34,7 @@ export default function LogoutButton({
       disabled={isSubmitting}
       className="rounded-full bg-slate-800 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-500"
     >
-      {isSubmitting ? "Logging out..." : "Logout"}
+      {isSubmitting ? "Đang đăng xuất..." : "Đăng xuất"}
     </button>
   );
 }

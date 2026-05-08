@@ -11,10 +11,10 @@ interface AuthFormProps {
 export default function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const requestedNextPath = searchParams.get("next") || "/quan-ly";
+  const requestedNextPath = searchParams.get("next") || "/";
   const nextPath = requestedNextPath.startsWith("/")
     ? requestedNextPath
-    : "/quan-ly";
+    : "/";
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
@@ -25,18 +25,18 @@ export default function AuthForm({ mode }: AuthFormProps) {
     () =>
       mode === "login"
         ? {
-            title: "Login",
-            buttonText: "Sign in",
+            title: "Đăng nhập",
+            buttonText: "Đăng nhập",
             endpoint: "/api/auth/login",
             alternateHref: `/register?next=${encodeURIComponent(nextPath)}`,
-            alternateLabel: "Need an account? Register",
+            alternateLabel: "Chưa có tài khoản? Đăng ký",
           }
         : {
-            title: "Register",
-            buttonText: "Create account",
+            title: "Đăng ký",
+            buttonText: "Tạo tài khoản",
             endpoint: "/api/auth/register",
             alternateHref: `/login?next=${encodeURIComponent(nextPath)}`,
-            alternateLabel: "Already have an account? Log in",
+            alternateLabel: "Đã có tài khoản? Đăng nhập",
           },
     [mode, nextPath]
   );
@@ -62,14 +62,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Request failed.");
+        setError(data.error || "Yêu cầu thất bại.");
         return;
       }
 
       router.replace(nextPath);
       router.refresh();
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError("Có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setIsSubmitting(false);
     }
@@ -80,33 +80,33 @@ export default function AuthForm({ mode }: AuthFormProps) {
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
         <h1 className="text-3xl font-bold text-slate-900">{config.title}</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Username/password auth backed by Firestore and secure cookies.
+          Đăng nhập bằng username/password (lưu Firestore + cookie bảo mật).
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           {mode === "register" && (
             <label className="block">
               <span className="mb-1 block text-sm font-medium text-slate-700">
-                Display name
+                Tên hiển thị
               </span>
               <input
                 value={displayName}
                 onChange={(event) => setDisplayName(event.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-0 focus:border-slate-500"
-                placeholder="How your name should appear"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder:text-slate-400 outline-none ring-0 focus:border-slate-500"
+                placeholder="VD: Dayton"
               />
             </label>
           )}
 
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-slate-700">
-              Username
+              Tên đăng nhập
             </span>
             <input
               value={username}
               onChange={(event) => setUsername(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-0 focus:border-slate-500"
-              placeholder="letters, numbers, _ or -"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder:text-slate-400 outline-none ring-0 focus:border-slate-500"
+              placeholder="chữ/số, _ hoặc - (không dấu)"
               autoComplete="username"
               required
             />
@@ -114,16 +114,17 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-slate-700">
-              Password
+              Mật khẩu
             </span>
             <input
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-0 focus:border-slate-500"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder:text-slate-400 outline-none ring-0 focus:border-slate-500"
               autoComplete={
                 mode === "login" ? "current-password" : "new-password"
               }
+              placeholder={mode === "login" ? "Nhập mật khẩu" : "Tạo mật khẩu"}
               required
             />
           </label>
@@ -139,13 +140,13 @@ export default function AuthForm({ mode }: AuthFormProps) {
             disabled={isSubmitting}
             className="w-full rounded-lg bg-slate-900 px-4 py-2 font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
-            {isSubmitting ? "Please wait..." : config.buttonText}
+            {isSubmitting ? "Đang xử lý..." : config.buttonText}
           </button>
         </form>
 
         <div className="mt-4 flex items-center justify-between text-sm">
           <Link href="/" className="text-slate-500 hover:text-slate-900">
-            Back home
+            Về trang chủ
           </Link>
           <Link href={config.alternateHref} className="text-slate-700 underline">
             {config.alternateLabel}

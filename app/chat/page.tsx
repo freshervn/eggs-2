@@ -65,6 +65,7 @@ export default async function ChatPage() {
         initialMessages={initialMessages}
         initialRooms={initialRooms}
         currentUsername={session.username}
+        currentDisplayName={session.displayName}
       />
     </div>
   );

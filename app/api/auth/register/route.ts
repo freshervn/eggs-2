@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Failed to register user.";
+      error instanceof Error ? error.message : "Đăng ký thất bại.";
 
     const status =
       message === "Username is already taken." ||

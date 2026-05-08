@@ -1,66 +1,96 @@
-"use client";
-import EggList from "./_components/EggList";
 import Link from "next/link";
-import { getItems, Item } from "@/_lib/api/items";
-import { useEffect, useState } from "react";
+import { readSession } from "@/_lib/auth/session";
+import HomeAuthCorner from "./_components/HomeAuthCorner";
 
-export default function Home() {
-  // Get data from items API using getItems from @/_lib/api/items
-  const [data, setData] = useState<Item[]>([]);
+type HubLink = {
+  href: "/chat" | "/me" | "/nuoi-meo" | "/store" | "/piano" | "/3d";
+  label: string;
+  description: string;
+  accentClass: string;
+};
 
-  useEffect(() => {
-    getItems().then(setData);
-  }, []);
+const destinations: HubLink[] = [
+  {
+    href: "/me",
+    label: "About me",
+    description: "Profile and contact",
+    accentClass: "border-l-slate-400",
+  },
+  {
+    href: "/chat",
+    label: "Chat",
+    description: "Open the chat room",
+    accentClass: "border-l-sky-500",
+  },
+  {
+    href: "/store",
+    label: "My store",
+    description: "Browse items and checkout",
+    accentClass: "border-l-amber-500",
+  },
+  {
+    href: "/nuoi-meo",
+    label: "Nuôi mèo",
+    description: "Cat care fundraiser · MoMo donations",
+    accentClass: "border-l-rose-500",
+  },
+  {
+    href: "/piano",
+    label: "Piano game",
+    description: "Play music using your keyboard",
+    accentClass: "border-l-violet-500",
+  },
+  {
+    href: "/3d",
+    label: "3D demo",
+    description: "Three.js first-person playground (WASD + mouse)",
+    accentClass: "border-l-emerald-500",
+  },
+];
+
+export default async function Home() {
+  const session = await readSession();
+
   return (
-    <>
-      <div className="h-dvh w-100dvw scroll-auto overflow-auto pb-20 pt-4">
-        <div className="mb-4 flex gap-3">
-          <Link
-            href="/login?next=/chat"
-            className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white"
-          >
-            Login
-          </Link>
-          <Link
-            href="/register?next=/chat"
-            className="rounded-full border border-slate-900 px-4 py-2 text-sm font-medium text-slate-900"
-          >
-            Register
-          </Link>
-          <Link
-            href="/chat"
-            className="rounded-full border border-sky-600 px-4 py-2 text-sm font-medium text-sky-700"
-          >
-            Open Chat
-          </Link>
-        </div>
-        <p>hello world</p>
-        <EggList data={data} />
-        <div className="bottom-0 left-0 w-full flex justify-center bg-yellow-500 absolute h-16">
-          <div className="">
-            <Link href="/payment" className="flex items-center h-full">
-              <button className="relative inline-block rounded-full bg-red-400 p-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-10 h-10 text-white drop-shadow-lg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.72A1 1 0 0 0 6.53 17h10.94a1 1 0 0 0 .88-1.45L17 13M7 13V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v7"
-                  />
-                  <circle cx="7.5" cy="20.5" r="1.5" />
-                  <circle cx="16.5" cy="20.5" r="1.5" />
-                </svg>
-              </button>
+    <div className="relative flex min-h-dvh flex-col items-center justify-center bg-gradient-to-b from-slate-100 to-slate-200/80 px-4 py-12 pt-20">
+      <HomeAuthCorner
+        session={
+          session
+            ? { displayName: session.displayName }
+            : null
+        }
+      />
+
+      <div className="w-full max-w-md">
+        <header className="text-center">
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+            Eggs
+          </h1>
+          <p className="mt-2 text-base text-slate-600">
+            Where do you want to go?
+          </p>
+        </header>
+
+        <nav
+          className="mt-10 flex flex-col gap-3"
+          aria-label="Main navigation"
+        >
+          {destinations.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col rounded-2xl border border-slate-200 border-l-4 bg-white py-4 pl-4 pr-5 shadow-sm transition hover:border-slate-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${item.accentClass}`}
+            >
+              <span className="text-lg font-semibold text-slate-900">
+                {item.label}
+              </span>
+              <span className="mt-1 text-sm leading-snug text-slate-600">
+                {item.description}
+              </span>
             </Link>
-          </div>
-        </div>
+          ))}
+        </nav>
       </div>
-    </>
+    </div>
   );
 }
