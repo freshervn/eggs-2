@@ -502,7 +502,7 @@ export default function ChatRoom({
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-6xl gap-6 py-6">
-      <aside className="w-full max-w-xs rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <aside className="w-full max-w-xs rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur">
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-slate-900">Private Chat</h1>
           <p className="text-sm text-slate-500">
@@ -519,7 +519,7 @@ export default function ChatRoom({
               value={userSearch}
               onChange={(event) => setUserSearch(event.target.value)}
               placeholder="Search by username or display name"
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:border-slate-500"
+              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-900 placeholder:text-slate-400 outline-none focus:border-slate-500 focus:bg-white"
             />
             <div className="space-y-2">
               {userSearch.trim().length < 2 ? (
@@ -611,7 +611,7 @@ export default function ChatRoom({
         </div>
       </aside>
 
-      <div className="flex-1 rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex-1 rounded-2xl border border-slate-200 bg-white/90 shadow-sm backdrop-blur">
         <div className="border-b border-slate-200 px-5 py-4">
           <h2 className="text-2xl font-bold text-slate-900">
             {activeRoom ? getOtherParticipant(activeRoom).displayName : "Select a room"}
@@ -727,7 +727,7 @@ export default function ChatRoom({
               placeholder={
                 activeRoom ? "Type a message" : "Create or select a room first"
               }
-              className="min-h-24 flex-1 rounded-xl border border-slate-300 px-3 py-2 text-black outline-none focus:border-slate-500"
+              className="min-h-24 flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-900 placeholder:text-slate-400 outline-none focus:border-slate-500 focus:bg-white"
               maxLength={500}
               disabled={!activeRoom}
             />
