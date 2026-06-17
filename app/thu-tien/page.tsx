@@ -260,12 +260,6 @@ export default function ThuTienPage() {
         }`}
       >
         <div className="flex items-center justify-between gap-4">
-          <Link
-            href="/"
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:border-slate-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
-          >
-            ← Home
-          </Link>
           <div className="text-right">
             <div className="flex items-center justify-end gap-2">
               {connected && (
