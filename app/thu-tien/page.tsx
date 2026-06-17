@@ -1,9 +1,13 @@
 "use client";
 
 import QRCode from "@/app/_components/QRCode";
+import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { parseSenderFromDescription } from "@/_lib/casso";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  CASSO_SAVE_CONTENT_PREFIX,
+  parseSenderFromDescription,
+} from "@/_lib/casso";
 import {
   subscribeCassoTransactions,
   subscribeMoneyIn,
@@ -80,6 +84,9 @@ export default function ThuTienPage() {
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [thankYouMessage, setThankYouMessage] = useState<string | null>(null);
+  const seenCassoIdsRef = useRef<Set<string>>(new Set());
+  const cassoInitializedRef = useRef(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -122,6 +129,31 @@ export default function ThuTienPage() {
       unsubManual();
     };
   }, []);
+
+  useEffect(() => {
+    const seen = seenCassoIdsRef.current;
+
+    if (!cassoInitializedRef.current) {
+      for (const tx of cassoTransactions) {
+        seen.add(tx.id);
+      }
+      cassoInitializedRef.current = true;
+      return;
+    }
+
+    for (const tx of cassoTransactions) {
+      if (seen.has(tx.id) || tx.amount <= 0) continue;
+      seen.add(tx.id);
+      const name = parseSenderFromDescription(tx.description);
+      setThankYouMessage(`Cảm ơn anh/chị ${name}`);
+    }
+  }, [cassoTransactions]);
+
+  useEffect(() => {
+    if (!thankYouMessage) return;
+    const timeout = setTimeout(() => setThankYouMessage(null), 5000);
+    return () => clearTimeout(timeout);
+  }, [thankYouMessage]);
 
   const entries = useMemo(() => {
     const merged = [
@@ -212,6 +244,16 @@ export default function ThuTienPage() {
 
   return (
     <div className="min-h-dvh bg-gradient-to-b from-slate-100 to-slate-200/80">
+      {thankYouMessage && (
+        <div
+          role="status"
+          className="fixed inset-x-0 top-4 z-50 flex justify-center px-4"
+        >
+          <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-center text-sm font-semibold text-emerald-800 shadow-lg">
+            {thankYouMessage}
+          </p>
+        </div>
+      )}
       <div
         className={`mx-auto w-full max-w-lg px-4 py-10 ${
           isLoggedIn ? "pb-[30rem]" : ""
@@ -267,18 +309,40 @@ export default function ThuTienPage() {
         </div>
 
         <header className="mt-8">
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-            Sổ quỹ
+          <h1 className="text-3xl font-semibold tracking-tight text-center text-slate-900">
+            Nuôi em mèo
           </h1>
-          <div className="mt-4 w-full rounded-lg border border-slate-200 bg-white p-4">
-            <QRCode
-              value={PAYMENT_QR_PAYLOAD}
-              size={512}
-              level="H"
-              bgColor="#FFFFFF"
-              fgColor="#000000"
-              className="h-auto w-full"
-            />
+          <div className="mt-4 flex flex-col items-center">
+            <div className="relative aspect-square w-full max-w-sm overflow-hidden rounded-lg shadow-md">
+              <Image
+                src="/nuoi-meo-cat.jpg"
+                alt="Nuôi em"
+                fill
+                priority
+                className="object-cover"
+                sizes="(max-width: 512px) 100vw, 384px"
+              />
+              <div
+                className="absolute flex items-center justify-center"
+                style={{
+                  top: "61%",
+                  left: "calc(50.5% + 5px)",
+                  width: "24%",
+                  height: "24%",
+                  transform: "translate(-50%, -50%) scale(1.5) rotate(1deg)",
+                }}
+              >
+                <QRCode
+                  value={PAYMENT_QR_PAYLOAD}
+                  size={96}
+                  level="H"
+                  bgColor="transparent"
+                  fgColor="#000000"
+                  includeMargin={false}
+                  className="h-[88%] w-[88%]"
+                />
+              </div>
+            </div>
             <p className="mt-3 text-center text-base font-semibold tracking-wide text-slate-900">
               BUI THANH DAT
             </p>
@@ -301,6 +365,58 @@ export default function ThuTienPage() {
               Không đồng bộ được Casso: {syncError}
             </p>
           )}
+
+          <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+              Hướng dẫn cú pháp
+            </h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Nội dung chuyển khoản cần có từ{" "}
+              <code className="rounded bg-emerald-50 px-1.5 py-0.5 font-mono text-xs font-semibold text-emerald-700">
+                {CASSO_SAVE_CONTENT_PREFIX}
+              </code>{" "}
+              để được ghi vào sổ quỹ.
+            </p>
+            <p className="mt-3 text-sm font-medium text-slate-700">
+              Cú pháp gợi ý:
+            </p>
+            <p className="mt-1 rounded-lg bg-slate-50 px-3 py-2 font-mono text-sm">
+              <span className="font-semibold text-emerald-600">
+                {CASSO_SAVE_CONTENT_PREFIX}
+              </span>{" "}
+              <span className="text-amber-600">[Tên]</span>{" "}
+              <span className="font-semibold text-violet-600">chuyen</span>{" "}
+              <span className="text-amber-600">[ghi chú]</span>
+            </p>
+            <p className="mt-3 text-sm font-medium text-slate-700">Ví dụ:</p>
+            <p className="mt-1 rounded-lg bg-slate-50 px-3 py-2 font-mono text-sm">
+              <span className="font-semibold text-emerald-600">
+                {CASSO_SAVE_CONTENT_PREFIX}
+              </span>{" "}
+              <span className="text-amber-600">Nguyen Van A</span>{" "}
+              <span className="font-semibold text-violet-600">chuyen</span>{" "}
+              <span className="text-amber-600">tien an trua</span>
+            </p>
+            <p className="mt-3 text-xs text-slate-500">
+              Tên người gửi lấy phần trước từ{" "}
+              <span className="font-mono font-semibold text-violet-600">
+                &quot;chuyen&quot;
+              </span>
+              ,{" "}
+              <span className="font-mono font-semibold text-violet-600">
+                &quot;chuyển&quot;
+              </span>
+              ,{" "}
+              <span className="font-mono font-semibold text-violet-600">
+                &quot;ck&quot;
+              </span>{" "}
+              hoặc{" "}
+              <span className="font-mono font-semibold text-violet-600">
+                &quot;transfer&quot;
+              </span>
+              .
+            </p>
+          </div>
         </header>
 
         <section className="mt-8">

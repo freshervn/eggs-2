@@ -78,9 +78,13 @@ export function normalizeWebhookTransactions(body: {
 
 export function parseSenderFromDescription(description: string): string {
   const trimmed = description.trim();
-  const match = trimmed.match(/^(.+?)\s+(chuyen|chuyển|ck|transfer)/i);
+  const withoutPrefix = trimmed.replace(
+    new RegExp(`^${CASSO_SAVE_CONTENT_PREFIX}\\s+`, "i"),
+    ""
+  );
+  const match = withoutPrefix.match(/^(.+?)\s+(chuyen|chuyển|ck|transfer)/i);
   if (match) return match[1].trim();
-  return trimmed;
+  return withoutPrefix;
 }
 
 export function parseCassoWhen(when?: string): number {

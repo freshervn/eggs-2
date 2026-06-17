@@ -38,7 +38,7 @@ const destinations: HubLink[] = [
   },
   {
     href: "/nuoi-meo",
-    label: "Nuôi mèo",
+    label: "Nuôi em",
     description: "Cat care fundraiser · MoMo donations",
     accentClass: "border-l-rose-500",
   },
