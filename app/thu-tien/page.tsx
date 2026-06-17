@@ -430,7 +430,7 @@ export default function ThuTienPage() {
             )}
             {isLoggedIn === false && hasManualEntries && (
               <Link
-                href="/login?next=/thu-tien"
+                href="/login?next=/nuoimeo"
                 className="text-xs font-medium text-sky-700 underline"
               >
                 Đăng nhập để xóa
