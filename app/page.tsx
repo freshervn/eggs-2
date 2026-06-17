@@ -3,7 +3,15 @@ import { readSession } from "@/_lib/auth/session";
 import HomeAuthCorner from "./_components/HomeAuthCorner";
 
 type HubLink = {
-  href: "/chat" | "/me" | "/nuoi-meo" | "/store" | "/piano" | "/3d";
+  href:
+    | "/chat"
+    | "/me"
+    | "/nuoi-meo"
+    | "/store"
+    | "/piano"
+    | "/3d"
+    | "/sam"
+    | "/thu-tien";
   label: string;
   description: string;
   accentClass: string;
@@ -35,10 +43,22 @@ const destinations: HubLink[] = [
     accentClass: "border-l-rose-500",
   },
   {
+    href: "/thu-tien",
+    label: "Sổ quỹ",
+    description: "Log money in and out · Casso sync",
+    accentClass: "border-l-teal-500",
+  },
+  {
     href: "/piano",
     label: "Piano game",
     description: "Play music using your keyboard",
     accentClass: "border-l-violet-500",
+  },
+  {
+    href: "/sam",
+    label: "Sâm",
+    description: "Play a quick card match (vs bot)",
+    accentClass: "border-l-fuchsia-500",
   },
   {
     href: "/3d",

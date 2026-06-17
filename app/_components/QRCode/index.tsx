@@ -9,6 +9,7 @@ type QRCodeProps = {
   bgColor?: string;
   fgColor?: string;
   includeMargin?: boolean;
+  className?: string;
 };
 
 const QRCode = ({
@@ -18,6 +19,7 @@ const QRCode = ({
   bgColor = "#FFFFFF",
   fgColor = "#000000",
   includeMargin = true,
+  className,
 }: QRCodeProps) => {
   return (
     <QRCodeSVG
@@ -27,6 +29,7 @@ const QRCode = ({
       bgColor={bgColor}
       fgColor={fgColor}
       includeMargin={includeMargin}
+      className={className}
     />
   );
 };
