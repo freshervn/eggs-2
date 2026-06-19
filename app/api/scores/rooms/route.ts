@@ -2,6 +2,7 @@ import { getUserByUsername } from "@/_lib/auth/users";
 import { resolvePlayerFromBody } from "@/_lib/scores/player";
 import {
   createUniqueInviteCode,
+  defaultRowColorForIndex,
   mapRoom,
   SCORE_ROOMS_COLLECTION,
 } from "@/_lib/scores/games";
@@ -52,6 +53,8 @@ export async function POST(request: NextRequest) {
       username: player.username,
       displayName: player.displayName,
       score: 0,
+      roundScore: 0,
+      rowColor: defaultRowColorForIndex(0),
     },
   ];
   const memberUsernames = [player.username];
@@ -63,6 +66,8 @@ export async function POST(request: NextRequest) {
         username: invited.username,
         displayName: invited.displayName,
         score: 0,
+        roundScore: 0,
+        rowColor: defaultRowColorForIndex(members.length),
       });
       memberUsernames.push(invited.username);
     }
@@ -75,6 +80,7 @@ export async function POST(request: NextRequest) {
     hostDisplayName: player.displayName,
     memberUsernames,
     members,
+    roundNumber: 1,
     createdAt: now,
     updatedAt: now,
   });

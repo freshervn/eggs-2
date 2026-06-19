@@ -1,5 +1,5 @@
 import { resolvePlayerFromBody } from "@/_lib/scores/player";
-import { mapRoom, SCORE_ROOMS_COLLECTION } from "@/_lib/scores/games";
+import { defaultRowColorForIndex, mapRoom, SCORE_ROOMS_COLLECTION, serializeRoomMembers } from "@/_lib/scores/games";
 import { admin } from "@/_lib/firebase/Admin";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -48,7 +48,10 @@ export async function POST(request: NextRequest) {
         : m
     );
     if (members.some((m, i) => m.displayName !== room.members[i]?.displayName)) {
-      await doc.ref.update({ members, updatedAt: Date.now() });
+      await doc.ref.update({
+        members: serializeRoomMembers(members),
+        updatedAt: Date.now(),
+      });
       return NextResponse.json({ room: mapRoom(await doc.ref.get()) });
     }
     return NextResponse.json({ room });
@@ -57,14 +60,16 @@ export async function POST(request: NextRequest) {
   const now = Date.now();
   await doc.ref.update({
     memberUsernames: [...room.memberUsernames, player.username],
-    members: [
+    members: serializeRoomMembers([
       ...room.members,
       {
         username: player.username,
         displayName: player.displayName,
         score: 0,
+        roundScore: 0,
+        rowColor: defaultRowColorForIndex(room.members.length),
       },
-    ],
+    ]),
     updatedAt: now,
   });
 

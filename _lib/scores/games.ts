@@ -1,4 +1,7 @@
 import { admin } from "@/_lib/firebase/Admin";
+import { defaultRowColorForIndex } from "./colors";
+
+export { DEFAULT_ROW_COLORS, ROW_COLORS, defaultRowColorForIndex } from "./colors";
 
 const db = admin.firestore();
 
@@ -39,6 +42,8 @@ export interface ScoreRoomMember {
   username: string;
   displayName: string;
   score: number;
+  roundScore: number;
+  rowColor?: string;
 }
 
 export interface ScoreRoomRecord {
@@ -49,11 +54,21 @@ export interface ScoreRoomRecord {
   hostDisplayName: string;
   memberUsernames: string[];
   members: ScoreRoomMember[];
+  roundNumber: number;
   createdAt: number;
   updatedAt: number;
 }
 
 const INVITE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+export const serializeRoomMembers = (members: ScoreRoomMember[]) =>
+  members.map((m, index) => ({
+    username: m.username,
+    displayName: m.displayName,
+    score: m.score,
+    roundScore: m.roundScore ?? 0,
+    rowColor: m.rowColor ?? defaultRowColorForIndex(index),
+  }));
 
 export const generateInviteCode = (length = 6) => {
   let code = "";
@@ -141,6 +156,8 @@ export const mapRoom = (
         username: String(m.username ?? ""),
         displayName: String(m.displayName ?? m.username ?? ""),
         score: Number(m.score ?? 0),
+        roundScore: Number(m.roundScore ?? 0),
+        rowColor: m.rowColor ? String(m.rowColor) : undefined,
       }))
     : [];
 
@@ -152,6 +169,7 @@ export const mapRoom = (
     hostDisplayName: String(data.hostDisplayName ?? ""),
     memberUsernames,
     members,
+    roundNumber: Number(data.roundNumber ?? 1),
     createdAt: Number(data.createdAt ?? 0),
     updatedAt: Number(data.updatedAt ?? 0),
   };

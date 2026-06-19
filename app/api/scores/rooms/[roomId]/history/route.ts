@@ -31,7 +31,7 @@ export async function GET(
   const memberUsername =
     request.nextUrl.searchParams.get("memberUsername")?.trim() ?? "";
 
-  if (!memberUsername || !room.memberUsernames.includes(memberUsername)) {
+  if (memberUsername && !room.memberUsernames.includes(memberUsername)) {
     return NextResponse.json({ error: "Member not found" }, { status: 400 });
   }
 
@@ -42,7 +42,7 @@ export async function GET(
 
   const history = snapshot.docs
     .map(mapHistoryEntry)
-    .filter((entry) => entry.memberUsername === memberUsername)
+    .filter((entry) => !memberUsername || entry.memberUsername === memberUsername)
     .slice(0, SCORE_HISTORY_LIMIT);
 
   return NextResponse.json({ history });

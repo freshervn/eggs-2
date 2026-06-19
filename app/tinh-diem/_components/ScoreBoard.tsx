@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Modal from "@/app/_components/Modal";
+import { ROW_COLORS, defaultRowColorForIndex } from "@/_lib/scores/colors";
 
 export interface ScoreRoomMember {
   username: string;
   displayName: string;
   score: number;
+  roundScore: number;
+  rowColor?: string;
 }
 
 export interface ScoreHistoryEntry {
@@ -30,6 +33,7 @@ export interface ScoreRoom {
   hostDisplayName: string;
   memberUsernames: string[];
   members: ScoreRoomMember[];
+  roundNumber: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -55,16 +59,20 @@ const SCORE_STEP_KEY = "tinh-diem-score-step";
 const DEFAULT_SCORE_STEP = 5;
 const SCORE_PRESETS = [1, 5, 10, 20, 50];
 
-const BAR_COLORS = [
-  "bg-sky-500",
-  "bg-violet-500",
-  "bg-emerald-500",
-  "bg-amber-500",
-  "bg-rose-500",
-  "bg-teal-500",
-  "bg-fuchsia-500",
-  "bg-orange-500",
-];
+function memberRowColor(member: ScoreRoomMember, index: number) {
+  return member.rowColor ?? defaultRowColorForIndex(index);
+}
+
+function formatScoreDisplay(value: number) {
+  if (value > 0) return `+${value}`;
+  return String(value);
+}
+
+function scoreTone(value: number) {
+  if (value > 0) return "text-emerald-600";
+  if (value < 0) return "text-rose-600";
+  return "text-slate-800";
+}
 
 function createGuestId() {
   const suffix =
@@ -117,22 +125,12 @@ function HistoryIcon() {
   );
 }
 
-function ScoreBar({
-  name,
+function ScoreControls({
   score,
-  maxScore,
-  colorClass,
-  isOwn,
   onScoreChange,
-  onHistoryClick,
 }: {
-  name: string;
   score: number;
-  maxScore: number;
-  colorClass: string;
-  isOwn?: boolean;
-  onScoreChange?: (score: number) => void;
-  onHistoryClick?: () => void;
+  onScoreChange: (score: number) => void;
 }) {
   const [deltaPopupMode, setDeltaPopupMode] = useState<"add" | "subtract" | null>(
     null
@@ -140,7 +138,6 @@ function ScoreBar({
   const [deltaAmount, setDeltaAmount] = useState(String(DEFAULT_SCORE_STEP));
   const plusClickRef = useRef(0);
   const minusClickRef = useRef(0);
-  const width = maxScore > 0 ? Math.max(4, (Math.abs(score) / maxScore) * 100) : 4;
 
   useEffect(() => {
     const saved = Number(localStorage.getItem(SCORE_STEP_KEY));
@@ -150,19 +147,13 @@ function ScoreBar({
   }, []);
 
   const applyDelta = (delta: number) => {
-    onScoreChange?.(score + delta);
-  };
-
-  const openDeltaPopup = (mode: "add" | "subtract") => {
-    setDeltaPopupMode(mode);
+    onScoreChange(score + delta);
   };
 
   const handlePlusClick = () => {
     plusClickRef.current += 1;
     setTimeout(() => {
-      if (plusClickRef.current === 1) {
-        applyDelta(1);
-      }
+      if (plusClickRef.current === 1) applyDelta(1);
       plusClickRef.current = 0;
     }, 220);
   };
@@ -170,15 +161,13 @@ function ScoreBar({
   const handlePlusDoubleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     plusClickRef.current = 0;
-    openDeltaPopup("add");
+    setDeltaPopupMode("add");
   };
 
   const handleMinusClick = () => {
     minusClickRef.current += 1;
     setTimeout(() => {
-      if (minusClickRef.current === 1) {
-        applyDelta(-1);
-      }
+      if (minusClickRef.current === 1) applyDelta(-1);
       minusClickRef.current = 0;
     }, 220);
   };
@@ -186,7 +175,7 @@ function ScoreBar({
   const handleMinusDoubleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     minusClickRef.current = 0;
-    openDeltaPopup("subtract");
+    setDeltaPopupMode("subtract");
   };
 
   const confirmDeltaAmount = () => {
@@ -201,63 +190,28 @@ function ScoreBar({
 
   return (
     <>
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          {onHistoryClick && (
-            <button
-              type="button"
-              onClick={onHistoryClick}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-              title="Lịch sử thay đổi điểm"
-              aria-label={`Lịch sử điểm của ${name}`}
-            >
-              <HistoryIcon />
-            </button>
-          )}
-          <span className="min-w-0 truncate font-medium text-slate-900">
-            {name}
-            {isOwn && (
-              <span className="ml-2 text-xs font-normal text-sky-600">(bạn)</span>
-            )}
-          </span>
-        </div>
-          {onScoreChange ? (
-            <div className="flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                onClick={handleMinusClick}
-                onDoubleClick={handleMinusDoubleClick}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-600 hover:bg-slate-50"
-                title="Nhấn 1 lần: −1 · Nhấn đúp: chọn số điểm"
-              >
-                −
-              </button>
-              <span className="min-w-[2.5rem] text-center text-xl font-bold tabular-nums text-slate-900">
-                {score}
-              </span>
-              <button
-                type="button"
-                onClick={handlePlusClick}
-                onDoubleClick={handlePlusDoubleClick}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-600 hover:bg-slate-50"
-                title="Nhấn 1 lần: +1 · Nhấn đúp: chọn số điểm"
-              >
-                +
-              </button>
-            </div>
-          ) : (
-            <span className="shrink-0 text-xl font-bold tabular-nums text-slate-900">
-              {score}
-            </span>
-          )}
-        </div>
-        <div className="mt-3 h-3 overflow-hidden rounded-full bg-slate-100">
-          <div
-            className={`h-full rounded-full transition-all duration-300 ${colorClass}`}
-            style={{ width: `${width}%` }}
-          />
-        </div>
+      <div className="flex items-center justify-center gap-4 py-2">
+        <button
+          type="button"
+          onClick={handleMinusClick}
+          onDoubleClick={handleMinusDoubleClick}
+          className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-xl text-slate-600 shadow-sm"
+          title="Nhấn 1 lần: −1 · Nhấn đúp: chọn số điểm"
+        >
+          −
+        </button>
+        <span className="min-w-[3rem] text-center text-2xl font-bold tabular-nums text-slate-900">
+          {score}
+        </span>
+        <button
+          type="button"
+          onClick={handlePlusClick}
+          onDoubleClick={handlePlusDoubleClick}
+          className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-xl text-slate-600 shadow-sm"
+          title="Nhấn 1 lần: +1 · Nhấn đúp: chọn số điểm"
+        >
+          +
+        </button>
       </div>
 
       <Modal
@@ -270,7 +224,6 @@ function ScoreBar({
         <p className="mt-1 text-sm text-slate-500">
           Chọn hoặc nhập số điểm muốn {isSubtract ? "trừ" : "cộng"}
         </p>
-
         <div className="mt-4 flex flex-wrap gap-2">
           {SCORE_PRESETS.map((preset) => (
             <button
@@ -290,7 +243,6 @@ function ScoreBar({
             </button>
           ))}
         </div>
-
         <input
           type="text"
           inputMode="numeric"
@@ -298,14 +250,11 @@ function ScoreBar({
           onChange={(e) => setDeltaAmount(e.target.value.replace(/[^\d]/g, ""))}
           className="mt-4 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-lg text-slate-900"
         />
-
         <button
           type="button"
           onClick={confirmDeltaAmount}
           className={`mt-4 w-full rounded-lg py-2.5 text-sm font-medium text-white ${
-            isSubtract
-              ? "bg-rose-600 hover:bg-rose-700"
-              : "bg-sky-600 hover:bg-sky-700"
+            isSubtract ? "bg-rose-600 hover:bg-rose-700" : "bg-sky-600 hover:bg-sky-700"
           }`}
         >
           OK
@@ -373,6 +322,11 @@ export default function ScoreBoard({
   } | null>(null);
   const [historyEntries, setHistoryEntries] = useState<ScoreHistoryEntry[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [selectedMemberUsername, setSelectedMemberUsername] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [colorPickerUsername, setColorPickerUsername] = useState<string | null>(null);
+  const [pendingRowColor, setPendingRowColor] = useState(defaultRowColorForIndex(0));
 
   const playerUsername = session?.username ?? guestId;
   const hasName = Boolean(session || guestName.trim());
@@ -382,12 +336,25 @@ export default function ScoreBoard({
     return { guestId, displayName: guestName };
   }, [session, guestId, guestName]);
 
-  const maxScore = useMemo(() => {
-    if (view === "room" && activeRoom) {
-      return Math.max(1, ...activeRoom.members.map((m) => Math.abs(m.score)));
+  const selectedMember = useMemo(() => {
+    if (!activeRoom || !selectedMemberUsername) return null;
+    return activeRoom.members.find((m) => m.username === selectedMemberUsername) ?? null;
+  }, [activeRoom, selectedMemberUsername]);
+
+  useEffect(() => {
+    if (!activeRoom) return;
+    const isHost = activeRoom.hostUsername === playerUsername;
+    const current = activeRoom.members.find((m) => m.username === selectedMemberUsername);
+    const canEditCurrent =
+      current &&
+      (selectedMemberUsername === playerUsername || isHost);
+    if (!canEditCurrent) {
+      const fallback =
+        activeRoom.members.find((m) => m.username === playerUsername) ??
+        (isHost ? activeRoom.members[0] : null);
+      if (fallback) setSelectedMemberUsername(fallback.username);
     }
-    return 1;
-  }, [view, activeRoom]);
+  }, [activeRoom, playerUsername, selectedMemberUsername]);
 
   useEffect(() => {
     if (session) {
@@ -605,26 +572,62 @@ export default function ScoreBoard({
     if (data.room) setActiveRoom(data.room);
   };
 
-  const copyInviteLink = () => {
-    if (!activeRoom) return;
-    const url = `${window.location.origin}/tinh-diem?room=${activeRoom.inviteCode}`;
-    navigator.clipboard.writeText(url);
+  const updateMemberRowColor = async (rowColor: string, targetUsername: string) => {
+    if (!playerUsername || !activeRoomId || !targetUsername) return;
+    const res = await fetch(`/api/scores/rooms/${activeRoomId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rowColor, targetUsername, ...playerBody() }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Không đổi màu được.");
+      return;
+    }
+    if (data.room) setActiveRoom(data.room);
+    setColorPickerUsername(null);
   };
 
-  const openMemberHistory = async (username: string, displayName: string) => {
+  const openRowColorPicker = (member: ScoreRoomMember, index: number) => {
+    setColorPickerUsername(member.username);
+    setPendingRowColor(memberRowColor(member, index));
+  };
+
+  const colorPickerMember = useMemo(() => {
+    if (!colorPickerUsername || !activeRoom) return null;
+    return activeRoom.members.find((m) => m.username === colorPickerUsername) ?? null;
+  }, [activeRoom, colorPickerUsername]);
+
+  const copyInviteLink = async () => {
+    if (!activeRoom) return;
+    const url = `${window.location.origin}/tinh-diem?room=${activeRoom.inviteCode}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      setError("Không sao chép được link.");
+    }
+  };
+
+  const openMemberHistory = async (username?: string, displayName?: string) => {
     if (!activeRoomId) return;
-    setHistoryMember({ username, displayName });
+    setHistoryMember(
+      username && displayName
+        ? { username, displayName }
+        : { username: "", displayName: "Tất cả" }
+    );
     setHistoryLoading(true);
     setHistoryEntries([]);
 
-    const params = new URLSearchParams({ memberUsername: username });
-    if (!session && guestId) {
-      params.set("guestId", guestId);
-    }
+    const params = new URLSearchParams();
+    if (username) params.set("memberUsername", username);
+    if (!session && guestId) params.set("guestId", guestId);
 
     try {
+      const qs = params.toString();
       const res = await fetch(
-        `/api/scores/rooms/${activeRoomId}/history?${params.toString()}`
+        `/api/scores/rooms/${activeRoomId}/history${qs ? `?${qs}` : ""}`
       );
       const data = await res.json();
       if (res.ok) {
@@ -639,20 +642,36 @@ export default function ScoreBoard({
     }
   };
 
+  const resetScores = async () => {
+    if (!activeRoomId || activeRoom?.hostUsername !== playerUsername) return;
+    const res = await fetch(`/api/scores/rooms/${activeRoomId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resetAll: true, ...playerBody() }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Không làm mới được.");
+      return;
+    }
+    if (data.room) setActiveRoom(data.room);
+  };
+
   if (!ready) {
     return <p className="text-center text-sm text-slate-500">Đang tải…</p>;
   }
 
   return (
     <div className="space-y-4">
-      {error && (
-        <p className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
+      {error && view !== "room" && (
+        <p className="mx-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
           {error}
         </p>
       )}
 
       {view === "home" && (
-        <div className="space-y-4">
+        <div className="space-y-4 px-4 py-6">
+          <h1 className="text-center text-2xl font-semibold text-slate-900">Tính điểm</h1>
           {session ? (
             <p className="text-center text-sm text-slate-500">
               Xin chào,{" "}
@@ -716,7 +735,7 @@ export default function ScoreBoard({
       )}
 
       {view === "join-room" && (
-        <div>
+        <div className="px-4 py-6">
           <BackButton onClick={() => setView("home")} />
           <h2 className="mb-4 text-xl font-semibold text-slate-900">Chọn phòng</h2>
 
@@ -762,7 +781,7 @@ export default function ScoreBoard({
       )}
 
       {view === "create-room" && (
-        <div>
+        <div className="px-4 py-6">
           <BackButton onClick={() => setView("home")} />
           <h2 className="mb-4 text-xl font-semibold text-slate-900">Tạo phòng</h2>
 
@@ -790,75 +809,203 @@ export default function ScoreBoard({
       )}
 
       {view === "room" && (
-        <div>
-          <BackButton onClick={() => setView("home")} />
+        <div className="flex min-h-dvh flex-col bg-white">
           {activeRoom ? (
             <>
-              <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900">{activeRoom.name}</h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Mã mời:{" "}
-                    <span className="font-mono font-semibold tracking-widest text-slate-800">
-                      {activeRoom.inviteCode}
-                    </span>
-                  </p>
-                </div>
+              <header className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => setView("home")}
+                  className="flex h-9 w-9 items-center justify-center text-slate-600"
+                  aria-label="Quay lại"
+                >
+                  ←
+                </button>
+                <h1 className="text-lg font-semibold text-slate-900">Tính điểm Sâm</h1>
+                <button
+                  type="button"
+                  onClick={() => setSettingsOpen(true)}
+                  className="flex h-9 w-9 items-center justify-center text-slate-600"
+                  aria-label="Cài đặt"
+                >
+                  ⚙
+                </button>
+              </header>
+
+              <div className="flex items-center justify-between px-4 py-3">
+                <p className="text-sm font-medium text-slate-700">
+                  Ván: {activeRoom.roundNumber ?? 1}
+                </p>
                 <button
                   type="button"
                   onClick={copyInviteLink}
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                  className="text-sm font-medium text-sky-600 hover:text-sky-800"
+                  title="Nhấn để sao chép link mời"
                 >
-                  Sao chép link
+                  {linkCopied ? "Đã sao chép link ✓" : `Mã ${activeRoom.inviteCode}`}
                 </button>
               </div>
 
-              {activeRoom.hostUsername === playerUsername && (
-                <p className="mb-3 text-xs text-amber-700">
-                  Chủ phòng — bạn có thể sửa điểm của mọi người
-                </p>
-              )}
+              <div className="px-4">
+                <div className="overflow-hidden rounded-xl border border-slate-200">
+                  <div className="grid grid-cols-[1fr_5rem] gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <span>Người chơi</span>
+                    <span className="text-right">Điểm</span>
+                  </div>
 
-              <div className="space-y-3">
-                {[...activeRoom.members]
-                  .sort((a, b) => b.score - a.score)
-                  .map((member, index) => {
+                  {activeRoom.members.map((member, index) => {
                     const isOwn = playerUsername === member.username;
                     const isHost = activeRoom.hostUsername === playerUsername;
                     const canEdit = isOwn || isHost;
+                    const isSelected = selectedMemberUsername === member.username;
+                    const rowColor = memberRowColor(member, index);
+
                     return (
-                      <ScoreBar
+                      <div
                         key={member.username}
-                        name={member.displayName}
-                        score={member.score}
-                        maxScore={maxScore}
-                        colorClass={BAR_COLORS[index % BAR_COLORS.length]}
-                        isOwn={isOwn}
-                        onHistoryClick={() =>
-                          openMemberHistory(member.username, member.displayName)
-                        }
-                        onScoreChange={
-                          canEdit
-                            ? (score) => updateMemberScore(score, member.username)
-                            : undefined
-                        }
-                      />
+                        role={canEdit ? "button" : undefined}
+                        tabIndex={canEdit ? 0 : undefined}
+                        onClick={() => canEdit && setSelectedMemberUsername(member.username)}
+                        onDoubleClick={(e) => {
+                          if (!canEdit) return;
+                          e.preventDefault();
+                          openRowColorPicker(member, index);
+                        }}
+                        onKeyDown={(e) => {
+                          if (canEdit && (e.key === "Enter" || e.key === " ")) {
+                            e.preventDefault();
+                            setSelectedMemberUsername(member.username);
+                          }
+                        }}
+                        style={{ backgroundColor: rowColor }}
+                        className={`grid grid-cols-[1fr_5rem] gap-2 border-b border-slate-200/60 px-3 py-3 last:border-b-0 ${
+                          isSelected ? "ring-2 ring-inset ring-sky-400/80" : ""
+                        } ${canEdit ? "cursor-pointer" : ""}`}
+                      >
+                        <span className="flex min-w-0 items-center gap-2 font-medium text-slate-900">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openMemberHistory(member.username, member.displayName);
+                            }}
+                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 hover:bg-white/60 hover:text-slate-600"
+                            title="Lịch sử"
+                          >
+                            <HistoryIcon />
+                          </button>
+                          <span className="truncate">
+                            {member.displayName}
+                            {isOwn && (
+                              <span className="ml-1 text-xs font-normal text-sky-600">
+                                (bạn)
+                              </span>
+                            )}
+                          </span>
+                        </span>
+                        <span
+                          className={`text-right text-base font-bold tabular-nums ${scoreTone(member.score)}`}
+                        >
+                          {formatScoreDisplay(member.score)}
+                        </span>
+                      </div>
                     );
                   })}
+                </div>
+              </div>
+
+              <div className="mt-4 px-4">
+                <h2 className="mb-2 text-sm font-semibold text-slate-800">Chi tiết ván</h2>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  <p>{activeRoom.name}</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Chọn người chơi để cộng/trừ điểm · Nhấn đúp hàng để đổi màu · Nhấn đúp +/− để nhập số lớn
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex-1" />
+
+              <div className="border-t border-slate-100 bg-white px-4 py-3">
+                {selectedMember &&
+                (selectedMember.username === playerUsername ||
+                  activeRoom.hostUsername === playerUsername) ? (
+                  <div className="mb-3 text-center text-sm text-slate-600">
+                    Đang sửa:{" "}
+                    <span className="font-semibold text-slate-900">
+                      {selectedMember.displayName}
+                    </span>
+                  </div>
+                ) : null}
+
+                {selectedMember &&
+                (selectedMember.username === playerUsername ||
+                  activeRoom.hostUsername === playerUsername) ? (
+                  <ScoreControls
+                    score={selectedMember.score}
+                    onScoreChange={(score) =>
+                      updateMemberScore(score, selectedMember.username)
+                    }
+                  />
+                ) : null}
+
+                {activeRoom.hostUsername === playerUsername && (
+                  <button
+                    type="button"
+                    onClick={resetScores}
+                    className="mt-3 w-full rounded-xl bg-sky-600 py-3 text-sm font-semibold text-white hover:bg-sky-700"
+                  >
+                    Làm mới
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => openMemberHistory()}
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-sky-200 py-3 text-sm font-semibold text-sky-700 hover:bg-sky-50"
+                >
+                  <HistoryIcon />
+                  Lịch sử
+                </button>
               </div>
             </>
           ) : (
-            <p className="text-sm text-slate-500">Đang tải phòng…</p>
+            <p className="p-6 text-sm text-slate-500">Đang tải phòng…</p>
           )}
         </div>
       )}
+
+      <Modal isOpen={settingsOpen} onRequestClose={() => setSettingsOpen(false)}>
+        <h3 className="pr-6 text-lg font-semibold text-slate-900">Cài đặt phòng</h3>
+        {activeRoom && (
+          <div className="mt-4 space-y-3 text-sm text-slate-700">
+            <p>
+              <span className="text-slate-500">Tên phòng:</span> {activeRoom.name}
+            </p>
+            <p>
+              <span className="text-slate-500">Mã mời:</span>{" "}
+              <span className="font-mono font-semibold">{activeRoom.inviteCode}</span>
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                copyInviteLink();
+                setSettingsOpen(false);
+              }}
+              className="w-full rounded-lg bg-sky-600 py-2.5 font-medium text-white hover:bg-sky-700"
+            >
+              Sao chép link mời
+            </button>
+          </div>
+        )}
+      </Modal>
 
       <Modal
         isOpen={historyMember !== null}
         onRequestClose={() => setHistoryMember(null)}
       >
         <h3 className="pr-6 text-lg font-semibold text-slate-900">
-          Lịch sử điểm — {historyMember?.displayName}
+          Lịch sử điểm{historyMember?.displayName ? ` — ${historyMember.displayName}` : ""}
         </h3>
 
         {historyLoading ? (
@@ -890,7 +1037,7 @@ export default function ScoreBoard({
                   </span>
                 </div>
                 <p className="mt-1 text-slate-800">
-                  {entry.previousScore} → {entry.newScore}
+                  {entry.memberDisplayName}: {entry.previousScore} → {entry.newScore}
                 </p>
                 <p className="mt-0.5 text-xs text-slate-500">
                   bởi {entry.changedByDisplayName}
@@ -899,6 +1046,55 @@ export default function ScoreBoard({
             ))}
           </ul>
         )}
+      </Modal>
+
+      <Modal
+        isOpen={colorPickerMember !== null}
+        onRequestClose={() => setColorPickerUsername(null)}
+      >
+        <h3 className="pr-6 text-lg font-semibold text-slate-900">
+          Màu hàng — {colorPickerMember?.displayName}
+        </h3>
+        <p className="mt-1 text-sm text-slate-500">Chọn màu nền cho người chơi này</p>
+
+        <div className="mt-4 grid grid-cols-6 gap-2">
+          {ROW_COLORS.map((color) => (
+            <button
+              key={color}
+              type="button"
+              onClick={() => setPendingRowColor(color)}
+              className={`aspect-square rounded-xl border-2 transition-transform hover:scale-105 ${
+                pendingRowColor.toLowerCase() === color.toLowerCase()
+                  ? "border-slate-700 ring-2 ring-slate-400 ring-offset-1"
+                  : "border-white/80 shadow-sm"
+              }`}
+              style={{ backgroundColor: color }}
+              title={color}
+            />
+          ))}
+        </div>
+
+        <div className="mt-4 flex items-center gap-3">
+          <input
+            type="color"
+            value={pendingRowColor}
+            onChange={(e) => setPendingRowColor(e.target.value)}
+            className="h-10 w-14 cursor-pointer rounded border border-slate-200 bg-white p-1"
+          />
+          <span className="font-mono text-sm text-slate-600">{pendingRowColor}</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (colorPickerMember) {
+              updateMemberRowColor(pendingRowColor, colorPickerMember.username);
+            }
+          }}
+          className="mt-4 w-full rounded-lg bg-sky-600 py-2.5 text-sm font-medium text-white hover:bg-sky-700"
+        >
+          Lưu màu
+        </button>
       </Modal>
     </div>
   );

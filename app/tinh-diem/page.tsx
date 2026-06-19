@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { readSession } from "@/_lib/auth/session";
 import {
   mapRoom,
+  defaultRowColorForIndex,
+  serializeRoomMembers,
   SCORE_ROOMS_COLLECTION,
 } from "@/_lib/scores/games";
 import { admin } from "@/_lib/firebase/Admin";
@@ -43,6 +45,7 @@ export default async function TinhDiemPage({
         hostUsername: r.hostUsername,
         hostDisplayName: r.hostDisplayName,
         memberUsernames: r.memberUsernames,
+        roundNumber: r.roundNumber,
         members: r.members,
         createdAt: r.createdAt,
         updatedAt: r.updatedAt,
@@ -63,14 +66,16 @@ export default async function TinhDiemPage({
             const now = Date.now();
             await roomDoc.ref.update({
               memberUsernames: [...room.memberUsernames, session.username],
-              members: [
+              members: serializeRoomMembers([
                 ...room.members,
                 {
                   username: session.username,
                   displayName: session.displayName,
                   score: 0,
+                  roundScore: 0,
+                  rowColor: defaultRowColorForIndex(room.members.length),
                 },
-              ],
+              ]),
               updatedAt: now,
             });
             initialRoomId = roomDoc.id;
@@ -83,14 +88,8 @@ export default async function TinhDiemPage({
   }
 
   return (
-    <div className="min-h-dvh bg-gradient-to-b from-slate-100 to-slate-200/80 px-4 py-10">
+    <div className="min-h-dvh bg-white">
       <div className="mx-auto w-full max-w-md">
-        <header className="mb-8 text-center">
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-            Tính điểm
-          </h1>
-        </header>
-
         <ScoreBoard
           initialRooms={initialRooms}
           session={
