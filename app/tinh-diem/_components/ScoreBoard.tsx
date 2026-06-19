@@ -1,12 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Modal from "@/app/_components/Modal";
 
 export interface ScoreRoomMember {
   username: string;
   displayName: string;
   score: number;
+}
+
+export interface ScoreHistoryEntry {
+  id: string;
+  memberUsername: string;
+  memberDisplayName: string;
+  previousScore: number;
+  newScore: number;
+  delta: number;
+  changedByUsername: string;
+  changedByDisplayName: string;
+  createdAt: number;
 }
 
 export interface ScoreRoom {
@@ -38,6 +51,9 @@ type View = "home" | "join-room" | "create-room" | "room";
 const GUEST_ID_KEY = "tinh-diem-guest-id";
 const GUEST_NAME_KEY = "tinh-diem-guest-name";
 const LOCAL_ROOMS_KEY = "tinh-diem-local-rooms";
+const SCORE_STEP_KEY = "tinh-diem-score-step";
+const DEFAULT_SCORE_STEP = 5;
+const SCORE_PRESETS = [1, 5, 10, 20, 50];
 
 const BAR_COLORS = [
   "bg-sky-500",
@@ -75,6 +91,32 @@ function saveLocalRoom(room: ScoreRoom) {
   localStorage.setItem(LOCAL_ROOMS_KEY, JSON.stringify(next));
 }
 
+function formatHistoryTime(timestamp: number) {
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(timestamp));
+}
+
+function HistoryIcon() {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className="h-4 w-4"
+      aria-hidden="true"
+    >
+      <path
+        fillRule="evenodd"
+        d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.5a.75.75 0 00-1.5 0v3.5c0 .199.079.39.22.53l2.25 2.25a.75.75 0 101.06-1.06l-2.03-2.03V6.5z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
 function ScoreBar({
   name,
   score,
@@ -82,6 +124,7 @@ function ScoreBar({
   colorClass,
   isOwn,
   onScoreChange,
+  onHistoryClick,
 }: {
   name: string;
   score: number;
@@ -89,54 +132,145 @@ function ScoreBar({
   colorClass: string;
   isOwn?: boolean;
   onScoreChange?: (score: number) => void;
+  onHistoryClick?: () => void;
 }) {
+  const [plusPopupOpen, setPlusPopupOpen] = useState(false);
+  const [plusAmount, setPlusAmount] = useState(String(DEFAULT_SCORE_STEP));
+  const plusClickRef = useRef(0);
   const width = maxScore > 0 ? Math.max(4, (Math.abs(score) / maxScore) * 100) : 4;
 
+  useEffect(() => {
+    const saved = Number(localStorage.getItem(SCORE_STEP_KEY));
+    if (Number.isFinite(saved) && saved > 0) {
+      setPlusAmount(String(Math.round(saved)));
+    }
+  }, []);
+
+  const applyDelta = (delta: number) => {
+    onScoreChange?.(score + delta);
+  };
+
+  const handlePlusClick = () => {
+    plusClickRef.current += 1;
+    setTimeout(() => {
+      if (plusClickRef.current === 1) {
+        applyDelta(1);
+      }
+      plusClickRef.current = 0;
+    }, 220);
+  };
+
+  const handlePlusDoubleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    plusClickRef.current = 0;
+    setPlusPopupOpen(true);
+  };
+
+  const confirmPlusAmount = () => {
+    const amount = Math.max(1, Math.round(Number(plusAmount) || DEFAULT_SCORE_STEP));
+    localStorage.setItem(SCORE_STEP_KEY, String(amount));
+    setPlusAmount(String(amount));
+    applyDelta(amount);
+    setPlusPopupOpen(false);
+  };
+
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <span className="min-w-0 truncate font-medium text-slate-900">
-          {name}
-          {isOwn && (
-            <span className="ml-2 text-xs font-normal text-sky-600">(bạn)</span>
+    <>
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          {onHistoryClick && (
+            <button
+              type="button"
+              onClick={onHistoryClick}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+              title="Lịch sử thay đổi điểm"
+              aria-label={`Lịch sử điểm của ${name}`}
+            >
+              <HistoryIcon />
+            </button>
           )}
-        </span>
-        {onScoreChange ? (
-          <div className="flex shrink-0 items-center gap-1">
-            <button
-              type="button"
-              onClick={() => onScoreChange(score - 1)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-600 hover:bg-slate-50"
-            >
-              −
-            </button>
-            <input
-              type="number"
-              value={score}
-              onChange={(e) => onScoreChange(Number(e.target.value) || 0)}
-              className="w-16 rounded-lg border border-slate-200 bg-white px-2 py-1 text-center text-sm text-slate-900"
-            />
-            <button
-              type="button"
-              onClick={() => onScoreChange(score + 1)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-600 hover:bg-slate-50"
-            >
-              +
-            </button>
-          </div>
-        ) : (
-          <span className="shrink-0 text-lg font-semibold tabular-nums text-slate-900">
-            {score}
+          <span className="min-w-0 truncate font-medium text-slate-900">
+            {name}
+            {isOwn && (
+              <span className="ml-2 text-xs font-normal text-sky-600">(bạn)</span>
+            )}
           </span>
-        )}
+        </div>
+          {onScoreChange ? (
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => applyDelta(-1)}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-600 hover:bg-slate-50"
+              >
+                −
+              </button>
+              <span className="min-w-[2.5rem] text-center text-xl font-bold tabular-nums text-slate-900">
+                {score}
+              </span>
+              <button
+                type="button"
+                onClick={handlePlusClick}
+                onDoubleClick={handlePlusDoubleClick}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-600 hover:bg-slate-50"
+                title="Nhấn 1 lần: +1 · Nhấn đúp: chọn số điểm"
+              >
+                +
+              </button>
+            </div>
+          ) : (
+            <span className="shrink-0 text-xl font-bold tabular-nums text-slate-900">
+              {score}
+            </span>
+          )}
+        </div>
+        <div className="mt-3 h-3 overflow-hidden rounded-full bg-slate-100">
+          <div
+            className={`h-full rounded-full transition-all duration-300 ${colorClass}`}
+            style={{ width: `${width}%` }}
+          />
+        </div>
       </div>
-      <div className="mt-3 h-3 overflow-hidden rounded-full bg-slate-100">
-        <div
-          className={`h-full rounded-full transition-all duration-300 ${colorClass}`}
-          style={{ width: `${width}%` }}
+
+      <Modal isOpen={plusPopupOpen} onRequestClose={() => setPlusPopupOpen(false)}>
+        <h3 className="pr-6 text-lg font-semibold text-slate-900">Cộng điểm</h3>
+        <p className="mt-1 text-sm text-slate-500">Chọn hoặc nhập số điểm muốn cộng</p>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {SCORE_PRESETS.map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              onClick={() => setPlusAmount(String(preset))}
+              className={`rounded-lg border px-3 py-2 text-sm font-medium ${
+                plusAmount === String(preset)
+                  ? "border-sky-500 bg-sky-50 text-sky-700"
+                  : "border-slate-200 text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              +{preset}
+            </button>
+          ))}
+        </div>
+
+        <input
+          type="text"
+          inputMode="numeric"
+          value={plusAmount}
+          onChange={(e) => setPlusAmount(e.target.value.replace(/[^\d]/g, ""))}
+          className="mt-4 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-lg text-slate-900"
         />
-      </div>
-    </div>
+
+        <button
+          type="button"
+          onClick={confirmPlusAmount}
+          className="mt-4 w-full rounded-lg bg-sky-600 py-2.5 text-sm font-medium text-white hover:bg-sky-700"
+        >
+          OK
+        </button>
+      </Modal>
+    </>
   );
 }
 
@@ -192,6 +326,12 @@ export default function ScoreBoard({
   const [joinCode, setJoinCode] = useState(initialInviteCode ?? "");
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
+  const [historyMember, setHistoryMember] = useState<{
+    username: string;
+    displayName: string;
+  } | null>(null);
+  const [historyEntries, setHistoryEntries] = useState<ScoreHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   const playerUsername = session?.username ?? guestId;
   const hasName = Boolean(session || guestName.trim());
@@ -409,21 +549,53 @@ export default function ScoreBoard({
     setView("room");
   };
 
-  const updateOwnRoomScore = async (score: number) => {
-    if (!playerUsername || !activeRoomId) return;
+  const updateMemberScore = async (score: number, targetUsername = playerUsername) => {
+    if (!playerUsername || !activeRoomId || !targetUsername) return;
     const res = await fetch(`/api/scores/rooms/${activeRoomId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ score, ...playerBody() }),
+      body: JSON.stringify({ score, targetUsername, ...playerBody() }),
     });
     const data = await res.json();
-    if (res.ok && data.room) setActiveRoom(data.room);
+    if (!res.ok) {
+      setError(data.error || "Không cập nhật được điểm.");
+      return;
+    }
+    if (data.room) setActiveRoom(data.room);
   };
 
   const copyInviteLink = () => {
     if (!activeRoom) return;
     const url = `${window.location.origin}/tinh-diem?room=${activeRoom.inviteCode}`;
     navigator.clipboard.writeText(url);
+  };
+
+  const openMemberHistory = async (username: string, displayName: string) => {
+    if (!activeRoomId) return;
+    setHistoryMember({ username, displayName });
+    setHistoryLoading(true);
+    setHistoryEntries([]);
+
+    const params = new URLSearchParams({ memberUsername: username });
+    if (!session && guestId) {
+      params.set("guestId", guestId);
+    }
+
+    try {
+      const res = await fetch(
+        `/api/scores/rooms/${activeRoomId}/history?${params.toString()}`
+      );
+      const data = await res.json();
+      if (res.ok) {
+        setHistoryEntries(data.history ?? []);
+      } else {
+        setError(data.error || "Không tải được lịch sử.");
+      }
+    } catch {
+      setError("Không tải được lịch sử.");
+    } finally {
+      setHistoryLoading(false);
+    }
   };
 
   if (!ready) {
@@ -600,11 +772,19 @@ export default function ScoreBoard({
                 </button>
               </div>
 
+              {activeRoom.hostUsername === playerUsername && (
+                <p className="mb-3 text-xs text-amber-700">
+                  Chủ phòng — bạn có thể sửa điểm của mọi người
+                </p>
+              )}
+
               <div className="space-y-3">
                 {[...activeRoom.members]
                   .sort((a, b) => b.score - a.score)
                   .map((member, index) => {
                     const isOwn = playerUsername === member.username;
+                    const isHost = activeRoom.hostUsername === playerUsername;
+                    const canEdit = isOwn || isHost;
                     return (
                       <ScoreBar
                         key={member.username}
@@ -613,7 +793,14 @@ export default function ScoreBoard({
                         maxScore={maxScore}
                         colorClass={BAR_COLORS[index % BAR_COLORS.length]}
                         isOwn={isOwn}
-                        onScoreChange={isOwn ? updateOwnRoomScore : undefined}
+                        onHistoryClick={() =>
+                          openMemberHistory(member.username, member.displayName)
+                        }
+                        onScoreChange={
+                          canEdit
+                            ? (score) => updateMemberScore(score, member.username)
+                            : undefined
+                        }
                       />
                     );
                   })}
@@ -624,6 +811,54 @@ export default function ScoreBoard({
           )}
         </div>
       )}
+
+      <Modal
+        isOpen={historyMember !== null}
+        onRequestClose={() => setHistoryMember(null)}
+      >
+        <h3 className="pr-6 text-lg font-semibold text-slate-900">
+          Lịch sử điểm — {historyMember?.displayName}
+        </h3>
+
+        {historyLoading ? (
+          <p className="mt-4 text-sm text-slate-500">Đang tải…</p>
+        ) : historyEntries.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-500">Chưa có thay đổi nào.</p>
+        ) : (
+          <ul className="mt-4 max-h-80 space-y-2 overflow-y-auto">
+            {historyEntries.map((entry) => (
+              <li
+                key={entry.id}
+                className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-slate-500">
+                    {formatHistoryTime(entry.createdAt)}
+                  </span>
+                  <span
+                    className={`font-semibold tabular-nums ${
+                      entry.delta > 0
+                        ? "text-emerald-600"
+                        : entry.delta < 0
+                          ? "text-rose-600"
+                          : "text-slate-600"
+                    }`}
+                  >
+                    {entry.delta > 0 ? "+" : ""}
+                    {entry.delta}
+                  </span>
+                </div>
+                <p className="mt-1 text-slate-800">
+                  {entry.previousScore} → {entry.newScore}
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  bởi {entry.changedByDisplayName}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Modal>
     </div>
   );
 }

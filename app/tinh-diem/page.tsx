@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { readSession } from "@/_lib/auth/session";
 import {
@@ -86,13 +85,6 @@ export default async function TinhDiemPage({
   return (
     <div className="min-h-dvh bg-gradient-to-b from-slate-100 to-slate-200/80 px-4 py-10">
       <div className="mx-auto w-full max-w-md">
-        <Link
-          href="/"
-          className="mb-6 inline-block text-sm font-medium text-sky-700 hover:text-sky-900"
-        >
-          ← Trang chủ
-        </Link>
-
         <header className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
             Tính điểm

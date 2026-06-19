@@ -4,6 +4,19 @@ const db = admin.firestore();
 
 export const SCORE_GAMES_COLLECTION = "scoreGames";
 export const SCORE_ROOMS_COLLECTION = "scoreRooms";
+export const SCORE_HISTORY_LIMIT = 50;
+
+export interface ScoreHistoryEntry {
+  id: string;
+  memberUsername: string;
+  memberDisplayName: string;
+  previousScore: number;
+  newScore: number;
+  delta: number;
+  changedByUsername: string;
+  changedByDisplayName: string;
+  createdAt: number;
+}
 
 export interface ScorePlayer {
   id: string;
@@ -55,6 +68,31 @@ export const getGameRef = (gameId: string) =>
 
 export const getRoomRef = (roomId: string) =>
   db.collection(SCORE_ROOMS_COLLECTION).doc(roomId);
+
+export const getRoomHistoryCollection = (roomId: string) =>
+  getRoomRef(roomId).collection("scoreHistory");
+
+export const mapHistoryEntry = (
+  doc:
+    | FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>
+    | FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>
+): ScoreHistoryEntry => {
+  const data = doc.data() ?? {};
+  const previousScore = Number(data.previousScore ?? 0);
+  const newScore = Number(data.newScore ?? 0);
+
+  return {
+    id: doc.id,
+    memberUsername: String(data.memberUsername ?? ""),
+    memberDisplayName: String(data.memberDisplayName ?? ""),
+    previousScore,
+    newScore,
+    delta: Number(data.delta ?? newScore - previousScore),
+    changedByUsername: String(data.changedByUsername ?? ""),
+    changedByDisplayName: String(data.changedByDisplayName ?? ""),
+    createdAt: Number(data.createdAt ?? 0),
+  };
+};
 
 export const mapGame = (
   doc:

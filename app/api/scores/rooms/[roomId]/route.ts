@@ -1,5 +1,9 @@
 import { getUserByUsername } from "@/_lib/auth/users";
-import { getRoomRef, mapRoom } from "@/_lib/scores/games";
+import {
+  getRoomHistoryCollection,
+  getRoomRef,
+  mapRoom,
+} from "@/_lib/scores/games";
 import { resolvePlayerFromBody, resolvePlayerFromRequest } from "@/_lib/scores/player";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -69,12 +73,44 @@ export async function PATCH(
     if (!Number.isFinite(score)) {
       return NextResponse.json({ error: "Invalid score" }, { status: 400 });
     }
+
+    const targetUsername = String(body?.targetUsername ?? player.username).trim();
+    if (!room.memberUsernames.includes(targetUsername)) {
+      return NextResponse.json({ error: "Member not found" }, { status: 400 });
+    }
+
+    const editingOther = targetUsername !== player.username;
+    if (editingOther && room.hostUsername !== player.username) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const targetMember = room.members.find((m) => m.username === targetUsername);
+    const previousScore = targetMember?.score ?? 0;
+
     members = members.map((m) =>
-      m.username === player.username
-        ? { ...m, score, displayName: player.displayName }
+      m.username === targetUsername
+        ? {
+            ...m,
+            score,
+            displayName:
+              targetUsername === player.username ? player.displayName : m.displayName,
+          }
         : m
     );
     updates.members = members;
+
+    if (previousScore !== score) {
+      await getRoomHistoryCollection(roomId).add({
+        memberUsername: targetUsername,
+        memberDisplayName: targetMember?.displayName ?? targetUsername,
+        previousScore,
+        newScore: score,
+        delta: score - previousScore,
+        changedByUsername: player.username,
+        changedByDisplayName: player.displayName,
+        createdAt: now,
+      });
+    }
   }
 
   if (
