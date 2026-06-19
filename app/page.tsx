@@ -6,7 +6,6 @@ type HubLink = {
   href:
     | "/chat"
     | "/me"
-    | "/nuoi-meo"
     | "/store"
     | "/piano"
     | "/3d"
@@ -38,14 +37,8 @@ const destinations: HubLink[] = [
     accentClass: "border-l-amber-500",
   },
   {
-    href: "/nuoi-meo",
-    label: "Nuôi em",
-    description: "Cat care fundraiser · MoMo donations",
-    accentClass: "border-l-rose-500",
-  },
-  {
     href: "/nuoimeo",
-    label: "Sổ quỹ",
+    label: "Nuôi em",
     description: "Log money in and out · Casso sync",
     accentClass: "border-l-teal-500",
   },
