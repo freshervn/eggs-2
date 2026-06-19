@@ -11,7 +11,8 @@ type HubLink = {
     | "/3d"
     | "/sam"
     | "/thu-tien"
-    | "/nuoimeo";
+    | "/nuoimeo"
+    | "/tinh-diem";
   label: string;
   description: string;
   accentClass: string;
@@ -41,6 +42,12 @@ const destinations: HubLink[] = [
     label: "Nuôi em",
     description: "Log money in and out · Casso sync",
     accentClass: "border-l-teal-500",
+  },
+  {
+    href: "/tinh-diem",
+    label: "Tính điểm",
+    description: "Score bars · save games · invite friends to a room",
+    accentClass: "border-l-red-500",
   },
   {
     href: "/piano",
