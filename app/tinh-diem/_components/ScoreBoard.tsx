@@ -134,20 +134,27 @@ function ScoreBar({
   onScoreChange?: (score: number) => void;
   onHistoryClick?: () => void;
 }) {
-  const [plusPopupOpen, setPlusPopupOpen] = useState(false);
-  const [plusAmount, setPlusAmount] = useState(String(DEFAULT_SCORE_STEP));
+  const [deltaPopupMode, setDeltaPopupMode] = useState<"add" | "subtract" | null>(
+    null
+  );
+  const [deltaAmount, setDeltaAmount] = useState(String(DEFAULT_SCORE_STEP));
   const plusClickRef = useRef(0);
+  const minusClickRef = useRef(0);
   const width = maxScore > 0 ? Math.max(4, (Math.abs(score) / maxScore) * 100) : 4;
 
   useEffect(() => {
     const saved = Number(localStorage.getItem(SCORE_STEP_KEY));
     if (Number.isFinite(saved) && saved > 0) {
-      setPlusAmount(String(Math.round(saved)));
+      setDeltaAmount(String(Math.round(saved)));
     }
   }, []);
 
   const applyDelta = (delta: number) => {
     onScoreChange?.(score + delta);
+  };
+
+  const openDeltaPopup = (mode: "add" | "subtract") => {
+    setDeltaPopupMode(mode);
   };
 
   const handlePlusClick = () => {
@@ -163,16 +170,34 @@ function ScoreBar({
   const handlePlusDoubleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     plusClickRef.current = 0;
-    setPlusPopupOpen(true);
+    openDeltaPopup("add");
   };
 
-  const confirmPlusAmount = () => {
-    const amount = Math.max(1, Math.round(Number(plusAmount) || DEFAULT_SCORE_STEP));
-    localStorage.setItem(SCORE_STEP_KEY, String(amount));
-    setPlusAmount(String(amount));
-    applyDelta(amount);
-    setPlusPopupOpen(false);
+  const handleMinusClick = () => {
+    minusClickRef.current += 1;
+    setTimeout(() => {
+      if (minusClickRef.current === 1) {
+        applyDelta(-1);
+      }
+      minusClickRef.current = 0;
+    }, 220);
   };
+
+  const handleMinusDoubleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    minusClickRef.current = 0;
+    openDeltaPopup("subtract");
+  };
+
+  const confirmDeltaAmount = () => {
+    const amount = Math.max(1, Math.round(Number(deltaAmount) || DEFAULT_SCORE_STEP));
+    localStorage.setItem(SCORE_STEP_KEY, String(amount));
+    setDeltaAmount(String(amount));
+    applyDelta(deltaPopupMode === "subtract" ? -amount : amount);
+    setDeltaPopupMode(null);
+  };
+
+  const isSubtract = deltaPopupMode === "subtract";
 
   return (
     <>
@@ -201,8 +226,10 @@ function ScoreBar({
             <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
-                onClick={() => applyDelta(-1)}
+                onClick={handleMinusClick}
+                onDoubleClick={handleMinusDoubleClick}
                 className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-600 hover:bg-slate-50"
+                title="Nhấn 1 lần: −1 · Nhấn đúp: chọn số điểm"
               >
                 −
               </button>
@@ -233,23 +260,33 @@ function ScoreBar({
         </div>
       </div>
 
-      <Modal isOpen={plusPopupOpen} onRequestClose={() => setPlusPopupOpen(false)}>
-        <h3 className="pr-6 text-lg font-semibold text-slate-900">Cộng điểm</h3>
-        <p className="mt-1 text-sm text-slate-500">Chọn hoặc nhập số điểm muốn cộng</p>
+      <Modal
+        isOpen={deltaPopupMode !== null}
+        onRequestClose={() => setDeltaPopupMode(null)}
+      >
+        <h3 className="pr-6 text-lg font-semibold text-slate-900">
+          {isSubtract ? "Trừ điểm" : "Cộng điểm"}
+        </h3>
+        <p className="mt-1 text-sm text-slate-500">
+          Chọn hoặc nhập số điểm muốn {isSubtract ? "trừ" : "cộng"}
+        </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
           {SCORE_PRESETS.map((preset) => (
             <button
               key={preset}
               type="button"
-              onClick={() => setPlusAmount(String(preset))}
+              onClick={() => setDeltaAmount(String(preset))}
               className={`rounded-lg border px-3 py-2 text-sm font-medium ${
-                plusAmount === String(preset)
-                  ? "border-sky-500 bg-sky-50 text-sky-700"
+                deltaAmount === String(preset)
+                  ? isSubtract
+                    ? "border-rose-500 bg-rose-50 text-rose-700"
+                    : "border-sky-500 bg-sky-50 text-sky-700"
                   : "border-slate-200 text-slate-700 hover:bg-slate-50"
               }`}
             >
-              +{preset}
+              {isSubtract ? "−" : "+"}
+              {preset}
             </button>
           ))}
         </div>
@@ -257,15 +294,19 @@ function ScoreBar({
         <input
           type="text"
           inputMode="numeric"
-          value={plusAmount}
-          onChange={(e) => setPlusAmount(e.target.value.replace(/[^\d]/g, ""))}
+          value={deltaAmount}
+          onChange={(e) => setDeltaAmount(e.target.value.replace(/[^\d]/g, ""))}
           className="mt-4 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-lg text-slate-900"
         />
 
         <button
           type="button"
-          onClick={confirmPlusAmount}
-          className="mt-4 w-full rounded-lg bg-sky-600 py-2.5 text-sm font-medium text-white hover:bg-sky-700"
+          onClick={confirmDeltaAmount}
+          className={`mt-4 w-full rounded-lg py-2.5 text-sm font-medium text-white ${
+            isSubtract
+              ? "bg-rose-600 hover:bg-rose-700"
+              : "bg-sky-600 hover:bg-sky-700"
+          }`}
         >
           OK
         </button>
