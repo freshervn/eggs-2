@@ -25,14 +25,18 @@ function openDb(): Promise<IDBDatabase> {
   });
 }
 
-export async function listPhotos(stopId: NinhBinhStopId): Promise<StoredPhoto[]> {
+export async function listPhotos(
+  stopId: NinhBinhStopId,
+): Promise<StoredPhoto[]> {
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, "readonly");
     const index = tx.objectStore(STORE).index("stopId");
     const request = index.getAll(stopId);
     request.onsuccess = () => {
-      const rows = (request.result as StoredPhoto[]).sort((a, b) => b.at - a.at);
+      const rows = (request.result as StoredPhoto[]).sort(
+        (a, b) => b.at - a.at,
+      );
       resolve(rows);
     };
     request.onerror = () => reject(request.error);
@@ -220,5 +224,7 @@ export function zipFiles(files: { name: string; data: Uint8Array }[]): Blob {
   writeU32(endView, 16, offset);
   writeU16(endView, 20, 0);
 
-  return new Blob([...locals, ...centrals, end], { type: "application/zip" });
+  new Blob([...locals, ...centrals, end] as BlobPart[], {
+    type: "application/zip",
+  });
 }
