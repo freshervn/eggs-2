@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --hostname 127.0.0.1 --port 3000",
+    "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -19,6 +19,7 @@
     "firebase-admin": "^13.6.0",
     "geist": "^1.7.0",
     "jose": "^6.2.0",
+    "mammoth": "^1.12.0",
     "next": "16.1.7",
     "qrcode.react": "^4.2.0",
     "react": "19.2.0",

@@ -1,76 +1,11 @@
 import Link from "next/link";
 import { readSession } from "@/_lib/auth/session";
 import HomeAuthCorner from "./_components/HomeAuthCorner";
-
-type HubLink = {
-  href:
-    | "/chat"
-    | "/me"
-    | "/store"
-    | "/piano"
-    | "/3d"
-    | "/sam"
-    | "/thu-tien"
-    | "/nuoimeo"
-    | "/tinh-diem";
-  label: string;
-  description: string;
-  accentClass: string;
-};
-
-const destinations: HubLink[] = [
-  {
-    href: "/me",
-    label: "About me",
-    description: "Profile and contact",
-    accentClass: "border-l-slate-400",
-  },
-  {
-    href: "/chat",
-    label: "Chat",
-    description: "Open the chat room",
-    accentClass: "border-l-sky-500",
-  },
-  {
-    href: "/store",
-    label: "My store",
-    description: "Browse items and checkout",
-    accentClass: "border-l-amber-500",
-  },
-  {
-    href: "/nuoimeo",
-    label: "Nuôi em",
-    description: "Log money in and out · Casso sync",
-    accentClass: "border-l-teal-500",
-  },
-  {
-    href: "/tinh-diem",
-    label: "Tính điểm",
-    description: "Score bars · save games · invite friends to a room",
-    accentClass: "border-l-red-500",
-  },
-  {
-    href: "/piano",
-    label: "Piano game",
-    description: "Play music using your keyboard",
-    accentClass: "border-l-violet-500",
-  },
-  {
-    href: "/sam",
-    label: "Sâm",
-    description: "Play a quick card match (vs bot)",
-    accentClass: "border-l-fuchsia-500",
-  },
-  {
-    href: "/3d",
-    label: "3D demo",
-    description: "Three.js first-person playground (WASD + mouse)",
-    accentClass: "border-l-emerald-500",
-  },
-];
+import { getHubDestinations } from "./_components/hub-destinations";
 
 export default async function Home() {
   const session = await readSession();
+  const destinations = getHubDestinations();
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center bg-gradient-to-b from-slate-100 to-slate-200/80 px-4 py-12 pt-20">

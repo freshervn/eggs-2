@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local-only features (not shared in repo)
+# Enable menu via LOCAL_HUB_MENU=1 in .env.local
+/app/jira/
+/app/api/jira/
+/_lib/jira/
