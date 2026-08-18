@@ -224,7 +224,7 @@ export function zipFiles(files: { name: string; data: Uint8Array }[]): Blob {
   writeU32(endView, 16, offset);
   writeU16(endView, 20, 0);
 
-  new Blob([...locals, ...centrals, end] as BlobPart[], {
+  return new Blob([...locals, ...centrals, end] as BlobPart[], {
     type: "application/zip",
   });
 }
