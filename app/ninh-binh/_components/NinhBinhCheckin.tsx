@@ -143,8 +143,9 @@ export default function NinhBinhCheckin() {
       if (allPhotos.length === 1) {
         const only = allPhotos[0];
         const bytes = dataUrlToBytes(only.photo.dataUrl);
+
         downloadBlob(
-          new Blob([bytes], { type: "image/jpeg" }),
+          new Blob([bytes.buffer as ArrayBuffer], { type: "image/jpeg" }),
           `ninh-binh-${only.stop.id}.jpg`,
         );
       } else {
@@ -221,7 +222,9 @@ export default function NinhBinhCheckin() {
     await deletePhoto(photo.id);
     setPhotos((prev) => ({
       ...prev,
-      [photo.stopId]: (prev[photo.stopId] ?? []).filter((row) => row.id !== photo.id),
+      [photo.stopId]: (prev[photo.stopId] ?? []).filter(
+        (row) => row.id !== photo.id,
+      ),
     }));
     if (viewer?.id === photo.id) setViewer(null);
   }
@@ -358,7 +361,9 @@ export default function NinhBinhCheckin() {
             <p className="mt-2 text-sm font-semibold text-[#1f3d28]">
               Thời gian xuất phát {selected.departAt}
             </p>
-            <p className="mt-0.5 text-xs text-[#6b7a66]">{selected.departNote}</p>
+            <p className="mt-0.5 text-xs text-[#6b7a66]">
+              {selected.departNote}
+            </p>
             <p className="mt-1 text-xs text-[#6b7a66]">
               {selected.duration} · {selected.ticket}
             </p>
