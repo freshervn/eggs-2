@@ -1,0 +1,10 @@
+{
+  "name": "eggs",
+  "install": "yarn install --frozen-lockfile",
+  "terminals": [
+    {
+      "name": "next-dev",
+      "command": "yarn dev"
+    }
+  ]
+}
