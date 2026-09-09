@@ -78,6 +78,26 @@ export const generateInviteCode = (length = 6) => {
   return code;
 };
 
+export const LOCAL_PLAYER_PREFIX = "local_";
+
+export const isLocalPlayerUsername = (username: string) =>
+  username.startsWith(LOCAL_PLAYER_PREFIX);
+
+// Local players are created by the room host and have no account/session; they
+// are identified by a room-unique synthetic username instead of a real one.
+export const generateLocalPlayerUsername = (existing: string[] = []) => {
+  const taken = new Set(existing);
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const candidate = `${LOCAL_PLAYER_PREFIX}${Date.now().toString(36)}${Math.random()
+      .toString(36)
+      .slice(2, 10)}`;
+    if (!taken.has(candidate)) return candidate;
+  }
+  return `${LOCAL_PLAYER_PREFIX}${Date.now().toString(36)}${Math.random()
+    .toString(36)
+    .slice(2, 12)}`;
+};
+
 export const getGameRef = (gameId: string) =>
   db.collection(SCORE_GAMES_COLLECTION).doc(gameId);
 

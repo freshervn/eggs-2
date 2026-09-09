@@ -324,6 +324,9 @@ export default function ScoreBoard({
   const [historyLoading, setHistoryLoading] = useState(false);
   const [selectedMemberUsername, setSelectedMemberUsername] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [addPlayerOpen, setAddPlayerOpen] = useState(false);
+  const [newPlayerName, setNewPlayerName] = useState("");
+  const [addingPlayer, setAddingPlayer] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [colorPickerUsername, setColorPickerUsername] = useState<string | null>(null);
   const [pendingRowColor, setPendingRowColor] = useState(defaultRowColorForIndex(0));
@@ -642,6 +645,40 @@ export default function ScoreBoard({
     }
   };
 
+  const addPlayer = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!activeRoomId) return;
+    const name = newPlayerName.trim();
+    if (!name) {
+      setError("Nhập tên người chơi.");
+      return;
+    }
+    setAddingPlayer(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/scores/rooms/${activeRoomId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ addPlayerName: name, ...playerBody() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Không thêm được người chơi.");
+        return;
+      }
+      if (data.room) {
+        setActiveRoom(data.room as ScoreRoom);
+        if (!session) saveLocalRoom(data.room as ScoreRoom);
+      }
+      setNewPlayerName("");
+      setAddPlayerOpen(false);
+    } catch {
+      setError("Lỗi mạng khi thêm người chơi.");
+    } finally {
+      setAddingPlayer(false);
+    }
+  };
+
   const resetScores = async () => {
     if (!activeRoomId || activeRoom?.hostUsername !== playerUsername) return;
     const res = await fetch(`/api/scores/rooms/${activeRoomId}`, {
@@ -952,6 +989,20 @@ export default function ScoreBoard({
                 {activeRoom.hostUsername === playerUsername && (
                   <button
                     type="button"
+                    onClick={() => {
+                      setNewPlayerName("");
+                      setError("");
+                      setAddPlayerOpen(true);
+                    }}
+                    className="mt-3 w-full rounded-xl border border-emerald-200 bg-emerald-50 py-3 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
+                  >
+                    ＋ Thêm người chơi
+                  </button>
+                )}
+
+                {activeRoom.hostUsername === playerUsername && (
+                  <button
+                    type="button"
                     onClick={resetScores}
                     className="mt-3 w-full rounded-xl bg-sky-600 py-3 text-sm font-semibold text-white hover:bg-sky-700"
                   >
@@ -998,6 +1049,37 @@ export default function ScoreBoard({
             </button>
           </div>
         )}
+      </Modal>
+
+      <Modal isOpen={addPlayerOpen} onRequestClose={() => setAddPlayerOpen(false)}>
+        <h3 className="pr-6 text-lg font-semibold text-slate-900">
+          Thêm người chơi
+        </h3>
+        <p className="mt-1 text-sm text-slate-500">
+          Chủ phòng có thể thêm người chơi trực tiếp — không cần tài khoản hay mã mời.
+        </p>
+        <form onSubmit={addPlayer} className="mt-4 space-y-3">
+          <input
+            value={newPlayerName}
+            onChange={(e) => setNewPlayerName(e.target.value)}
+            placeholder="Tên người chơi (VD: Minh)"
+            maxLength={30}
+            autoFocus
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400"
+          />
+          {error && addPlayerOpen && (
+            <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              {error}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={addingPlayer || !newPlayerName.trim()}
+            className="w-full rounded-lg bg-emerald-600 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {addingPlayer ? "Đang thêm…" : "Thêm người chơi"}
+          </button>
+        </form>
       </Modal>
 
       <Modal
