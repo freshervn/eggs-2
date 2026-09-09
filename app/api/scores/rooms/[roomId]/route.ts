@@ -3,11 +3,18 @@ import {
   getRoomHistoryCollection,
   getRoomRef,
   defaultRowColorForIndex,
+  generateLocalPlayerUsername,
   mapRoom,
   serializeRoomMembers,
 } from "@/_lib/scores/games";
-import { resolvePlayerFromBody, resolvePlayerFromRequest } from "@/_lib/scores/player";
+import {
+  normalizeDisplayName,
+  resolvePlayerFromBody,
+  resolvePlayerFromRequest,
+} from "@/_lib/scores/player";
 import { NextRequest, NextResponse } from "next/server";
+
+const MAX_ROOM_MEMBERS = 50;
 
 export async function GET(
   request: NextRequest,
@@ -148,6 +155,40 @@ export async function PATCH(
   if (body?.newRound === true && room.hostUsername === player.username) {
     updates.roundNumber = (room.roundNumber ?? 1) + 1;
     updates.members = members.map((m) => ({ ...m, roundScore: 0 }));
+  }
+
+  if (
+    body?.addPlayerName !== undefined &&
+    room.hostUsername === player.username
+  ) {
+    const displayName = normalizeDisplayName(body.addPlayerName);
+    if (!displayName) {
+      return NextResponse.json(
+        { error: "Tên người chơi không hợp lệ." },
+        { status: 400 }
+      );
+    }
+    if (memberUsernames.length >= MAX_ROOM_MEMBERS) {
+      return NextResponse.json(
+        { error: "Phòng đã đạt số người chơi tối đa." },
+        { status: 400 }
+      );
+    }
+
+    const localUsername = generateLocalPlayerUsername(memberUsernames);
+    memberUsernames = [...memberUsernames, localUsername];
+    members = [
+      ...members,
+      {
+        username: localUsername,
+        displayName,
+        score: 0,
+        roundScore: 0,
+        rowColor: defaultRowColorForIndex(members.length),
+      },
+    ];
+    updates.memberUsernames = memberUsernames;
+    updates.members = members;
   }
 
   if (
